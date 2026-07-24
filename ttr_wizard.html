@@ -1023,8 +1023,12 @@ function resetAll(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-resize();
-render();
+try {
+  resize();
+  render();
+} catch(e) {
+  document.body.innerHTML = '<div style="padding:20px;font-family:sans-serif;color:red"><h2>Erreur</h2><pre>' + e.message + '\n' + e.stack + '</pre></div>';
+}
 </script>
 </body>
 </html>
