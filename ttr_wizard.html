@@ -89,10 +89,14 @@ select { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1.5px
 .jewel-name { font-size: 11px; flex: 1; }
 .jewel-badge { font-size: 10px; font-weight: 600; color: var(--green); }
 
-.seg-list { display: flex; flex-wrap: wrap; gap: 3px; }
-.seg-list span { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 10px; }
-</style>
-</head>
+/* Toggle button */
+.toggle-btn { position: fixed; bottom: 20px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--blue); color: white; border: none; font-size: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 12px rgba(0,0,0,.3); z-index: 100; cursor: pointer; }
+.toggle-btn:active { opacity: .8; transform: scale(.95); }
+
+/* Map fullscreen mode */
+.map-area.fullscreen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; }
+.controls.hidden { display: none; }
+
 <body>
 <header>
   <h1>Aventuriers du Rail — Europe · Wizard stratégique</h1>
@@ -106,8 +110,9 @@ select { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1.5px
 </div>
 <div class="main">
   <div class="controls" id="sidebar"></div>
-  <div class="map-area"><canvas id="map"></canvas></div>
+  <div class="map-area" id="mapArea"><canvas id="map"></canvas></div>
 </div>
+<button class="toggle-btn" id="toggleBtn" onclick="toggleView()" title="Basculer carte / contrôles">🗺</button>
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
@@ -311,6 +316,26 @@ const COLORS = {
 // ── CANVAS ────────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
+
+let mapFullscreen = false;
+function toggleView(){
+  mapFullscreen = !mapFullscreen;
+  const mapArea = document.getElementById('mapArea');
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('toggleBtn');
+  if(mapFullscreen){
+    mapArea.classList.add('fullscreen');
+    sidebar.classList.add('hidden');
+    btn.textContent = '📋';
+    btn.title = 'Afficher les contrôles';
+  } else {
+    mapArea.classList.remove('fullscreen');
+    sidebar.classList.remove('hidden');
+    btn.textContent = '🗺';
+    btn.title = 'Agrandir la carte';
+  }
+  setTimeout(()=>{ resize(); draw(); }, 50);
+}
 
 function resize(){
   const c=canvas.parentElement;
