@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug</title>
+</head>
+<body>
+<div id="msg" style="padding:20px;font-family:sans-serif">Chargement...</div>
+<script>
+try {
+  document.getElementById('msg').textContent = 'Étape 1 OK';
+  
+  // Test des données
+  const CITIES = {"Paris":[0.22,0.72],"Londres":[0.13,0.83]};
+  document.getElementById('msg').textContent = 'Étape 2 OK - CITIES chargé';
+  
+  // Test canvas
+  const canvas = document.createElement('canvas');
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#1F4E79';
+  ctx.fillRect(10,10,100,50);
+  document.getElementById('msg').textContent = 'Étape 3 OK - Canvas fonctionne';
+  
+  // Test Set/Map
+  const s = new Set(['Paris','Londres']);
+  document.getElementById('msg').textContent = 'Étape 4 OK - tout fonctionne !';
+  
+} catch(e) {
+  document.getElementById('msg').textContent = 'ERREUR: ' + e.message;
+}
+</script>
+</body>
+</html>
