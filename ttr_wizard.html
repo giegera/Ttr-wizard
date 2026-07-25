@@ -314,8 +314,18 @@ const COLORS = {
 };
 
 // ── CANVAS ────────────────────────────────────────────────────────────────────
-const canvas = document.getElementById('map');
-const ctx = canvas.getContext('2d');
+let canvas, ctx;
+
+window.addEventListener('DOMContentLoaded', function() {
+  canvas = document.getElementById('map');
+  ctx = canvas.getContext('2d');
+  canvas.addEventListener('click', handleMapClick);
+  window.addEventListener('resize', resize);
+  resize();
+  render();
+});
+
+function handleMapClick(e){
 
 let mapFullscreen = false;
 function toggleView(){
@@ -343,7 +353,6 @@ function resize(){
   canvas.height=c.clientHeight;
   draw();
 }
-window.addEventListener('resize',resize);
 
 function cityPos(name){
   const[rx,ry]=CITIES[name];
@@ -511,14 +520,13 @@ function draw(){
 }
 
 // ── CLICK ON MAP ──────────────────────────────────────────────────────────────
-canvas.addEventListener('click',e=>{
+function handleMapClick(e){
   if(S.step!==2)return;
   const rect=canvas.getBoundingClientRect();
   const mx=e.clientX-rect.left, my=e.clientY-rect.top;
   const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
   const cx=mx*scaleX, cy=my*scaleY;
 
-  // Find closest city within 20px
   let best=null,bestD=20*Math.max(scaleX,scaleY);
   for(const[name]of Object.entries(CITIES)){
     const[px,py]=cityPos(name);
@@ -527,7 +535,6 @@ canvas.addEventListener('click',e=>{
   }
   if(!best)return;
 
-  // Toggle: if already last, remove it; else add it
   if(S.sequence.length>0&&S.sequence[S.sequence.length-1]===best){
     S.sequence.pop();
   } else if(!S.sequence.includes(best)){
@@ -1023,12 +1030,7 @@ function resetAll(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-try {
-  resize();
-  render();
-} catch(e) {
-  document.body.innerHTML = '<div style="padding:20px;font-family:sans-serif;color:red"><h2>Erreur</h2><pre>' + e.message + '\n' + e.stack + '</pre></div>';
-}
+// Init handled by DOMContentLoaded above
 </script>
 </body>
 </html>
