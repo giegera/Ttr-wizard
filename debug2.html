@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug2</title>
+</head>
+<body>
+<div id="msg" style="padding:20px;font-family:sans-serif;font-size:16px">Chargement...</div>
+<script>
+function log(msg){ document.getElementById('msg').innerHTML += '<br>' + msg; }
+
+window.addEventListener('DOMContentLoaded', function(){
+  try {
+    log('1. DOM prêt');
+    
+    const canvas = document.getElementById('map');
+    log('2. canvas = ' + canvas);
+    
+    if(!canvas){ log('ERREUR: canvas introuvable !'); return; }
+    
+    const ctx = canvas.getContext('2d');
+    log('3. ctx = ' + ctx);
+    
+    canvas.width = 200; canvas.height = 100;
+    ctx.fillStyle = '#1F4E79';
+    ctx.fillRect(0,0,200,100);
+    log('4. Canvas dessiné OK');
+    
+  } catch(e) {
+    log('ERREUR: ' + e.message);
+  }
+});
+</script>
+<canvas id="map" style="display:block;width:200px;height:100px;margin:10px"></canvas>
+</body>
+</html>
