@@ -317,17 +317,6 @@ const COLORS = {
 // ── CANVAS ────────────────────────────────────────────────────────────────────
 let canvas, ctx;
 
-window.addEventListener('DOMContentLoaded', function() {
-  canvas = document.getElementById('map');
-  ctx = canvas.getContext('2d');
-  canvas.addEventListener('click', handleMapClick);
-  window.addEventListener('resize', resize);
-  resize();
-  render();
-});
-
-function handleMapClick(e){
-
 let mapFullscreen = false;
 function toggleView(){
   mapFullscreen = !mapFullscreen;
@@ -520,7 +509,17 @@ function draw(){
   }
 }
 
-// ── CLICK ON MAP ──────────────────────────────────────────────────────────────
+let canvas, ctx;
+
+window.addEventListener('DOMContentLoaded', function() {
+  canvas = document.getElementById('map');
+  ctx = canvas.getContext('2d');
+  canvas.addEventListener('click', handleMapClick);
+  window.addEventListener('resize', resize);
+  resize();
+  render();
+});
+
 function handleMapClick(e){
   if(S.step!==2)return;
   const rect=canvas.getBoundingClientRect();
