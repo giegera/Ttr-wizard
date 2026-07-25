@@ -115,6 +115,9 @@ select { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1.5px
 <button class="toggle-btn" id="toggleBtn" onclick="toggleView()" title="Basculer carte / contrôles">🗺</button>
 
 <script>
+window.addEventListener('DOMContentLoaded', function() {
+  try {
+
 // ── DATA ──────────────────────────────────────────────────────────────────────
 const CITIES = {
   "Edinburgh":[.10,.92],"Londres":[.13,.83],"Brest":[.09,.72],"Dieppe":[.17,.76],
@@ -315,7 +318,7 @@ const COLORS = {
 };
 
 // ── CANVAS ────────────────────────────────────────────────────────────────────
-let canvas, ctx;
+
 
 let mapFullscreen = false;
 function toggleView(){
@@ -337,12 +340,7 @@ function toggleView(){
   setTimeout(()=>{ resize(); draw(); }, 50);
 }
 
-function resize(){
-  const c=canvas.parentElement;
-  canvas.width=c.clientWidth;
-  canvas.height=c.clientHeight;
-  draw();
-}
+
 
 function cityPos(name){
   const[rx,ry]=CITIES[name];
@@ -509,16 +507,9 @@ function draw(){
   }
 }
 
-let canvas, ctx;
 
-window.addEventListener('DOMContentLoaded', function() {
-  canvas = document.getElementById('map');
-  ctx = canvas.getContext('2d');
-  canvas.addEventListener('click', handleMapClick);
-  window.addEventListener('resize', resize);
-  resize();
-  render();
-});
+
+
 
 function handleMapClick(e){
   if(S.step!==2)return;
@@ -1030,7 +1021,25 @@ function resetAll(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Init handled by DOMContentLoaded above
+
+
+    const canvas = document.getElementById('map');
+    const ctx = canvas.getContext('2d');
+    
+    function resize(){
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      draw();
+    }
+    
+    canvas.addEventListener('click', handleMapClick);
+    window.addEventListener('resize', resize);
+    resize();
+    render();
+  } catch(e) {
+    document.body.innerHTML = '<div style="padding:20px;color:red;font-family:sans-serif"><h2>Erreur</h2><pre style="white-space:pre-wrap">' + e.message + '</pre></div>';
+  }
+});
 </script>
 </body>
 </html>
