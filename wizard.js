@@ -199,7 +199,6 @@ const COLORS = {
 };
 
 // ── CANVAS ────────────────────────────────────────────────────────────────────
-let canvas, ctx;
 
 let mapFullscreen = false;
 function toggleView(){
@@ -393,7 +392,6 @@ function draw(){
   }
 }
 
-let canvas, ctx;
 
 window.addEventListener('DOMContentLoaded', function() {
   canvas = document.getElementById('map');
@@ -914,4 +912,29 @@ function resetAll(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Init handled by DOMContentLoaded above
+var canvas, ctx;
+
+function initApp() {
+  canvas = document.getElementById('map');
+  ctx = canvas.getContext('2d');
+  
+  canvas.addEventListener('click', handleMapClick);
+  
+  window.addEventListener('resize', function() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    draw();
+  });
+  
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  
+  draw();
+  render();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
