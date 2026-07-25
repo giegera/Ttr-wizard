@@ -1,0 +1,917 @@
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const CITIES = {
+  "Edinburgh":[.10,.92],"Londres":[.13,.83],"Brest":[.09,.72],"Dieppe":[.17,.76],
+  "Paris":[.22,.72],"Amsterdam":[.26,.84],"Bruxelles":[.24,.78],"Pampelune":[.18,.62],
+  "Madrid":[.13,.53],"Lisboa":[.05,.50],"Cadix":[.10,.44],"Barcelone":[.22,.56],
+  "Marseille":[.26,.60],"Frankfurt":[.32,.78],"Essen":[.29,.84],"Kobenhavn":[.33,.93],
+  "Stockholm":[.42,.97],"Berlin":[.38,.83],"Dantzig":[.44,.84],"Riga":[.50,.90],
+  "Wilno":[.53,.84],"Varsovie":[.47,.78],"Petrograd":[.58,.95],"Moscou":[.68,.88],
+  "Smolensk":[.60,.83],"Kiev":[.58,.74],"Kharkov":[.64,.68],"Rostov":[.70,.60],
+  "Sochi":[.73,.54],"Zürich":[.30,.68],"Munich":[.34,.70],"Vienne":[.39,.70],
+  "Venise":[.36,.63],"Zagreb":[.40,.63],"Budapest":[.44,.66],"Sarajevo":[.43,.57],
+  "Bucarest":[.52,.60],"Sofia":[.48,.52],"Sébastopol":[.60,.54],"Constantinople":[.55,.45],
+  "Ankara":[.63,.43],"Erzurum":[.73,.40],"Smyrne":[.58,.38],"Athènes":[.48,.38],
+  "Brindisi":[.42,.48],"Rome":[.36,.52],"Palerme":[.37,.43],
+};
+
+const ROUTES = [
+  ["Edinburgh","Londres",4,true],["Londres","Dieppe",2,true],["Londres","Amsterdam",2,false],
+  ["Amsterdam","Bruxelles",1,false],["Amsterdam","Essen",3,false],["Amsterdam","Frankfurt",2,false],
+  ["Bruxelles","Dieppe",2,false],["Bruxelles","Frankfurt",2,false],["Bruxelles","Paris",2,true],
+  ["Dieppe","Paris",1,false],["Essen","Frankfurt",2,false],["Essen","Berlin",2,false],
+  ["Essen","Kobenhavn",3,true],["Kobenhavn","Stockholm",3,true],["Stockholm","Petrograd",8,false],
+  ["Brest","Dieppe",2,false],["Brest","Paris",3,false],["Brest","Pampelune",4,false],
+  ["Paris","Pampelune",4,true],["Paris","Zürich",3,false],["Paris","Frankfurt",3,true],
+  ["Frankfurt","Berlin",3,true],["Frankfurt","Munich",2,false],["Pampelune","Barcelone",2,false],
+  ["Pampelune","Madrid",3,true],["Barcelone","Madrid",2,false],["Barcelone","Marseille",4,false],
+  ["Madrid","Lisboa",3,false],["Madrid","Cadix",3,false],["Cadix","Lisboa",2,false],
+  ["Marseille","Pampelune",4,false],["Marseille","Paris",4,false],["Marseille","Rome",4,false],
+  ["Marseille","Zürich",2,false],["Zürich","Munich",2,false],["Zürich","Venise",2,false],
+  ["Munich","Vienne",3,false],["Munich","Venise",2,false],["Venise","Rome",2,false],
+  ["Venise","Zagreb",2,false],["Vienne","Budapest",1,true],["Vienne","Zagreb",2,false],
+  ["Vienne","Berlin",3,false],["Vienne","Varsovie",4,false],["Berlin","Dantzig",4,false],
+  ["Berlin","Varsovie",4,true],["Dantzig","Varsovie",2,false],["Dantzig","Riga",3,false],
+  ["Varsovie","Kiev",4,false],["Varsovie","Wilno",3,false],["Budapest","Zagreb",2,false],
+  ["Budapest","Sarajevo",3,false],["Budapest","Bucarest",4,false],["Budapest","Kiev",6,false],
+  ["Zagreb","Sarajevo",3,false],["Sarajevo","Sofia",2,false],["Sarajevo","Athènes",4,false],
+  ["Rome","Brindisi",2,false],["Rome","Palerme",4,false],["Brindisi","Palerme",3,false],
+  ["Brindisi","Athènes",4,false],["Athènes","Smyrne",2,false],["Athènes","Sofia",3,false],
+  ["Sofia","Bucarest",2,false],["Sofia","Constantinople",3,false],["Constantinople","Bucarest",3,false],
+  ["Constantinople","Smyrne",2,false],["Constantinople","Sébastopol",4,false],
+  ["Constantinople","Ankara",2,false],["Smyrne","Ankara",3,false],["Palerme","Smyrne",6,false],
+  ["Ankara","Erzurum",3,false],["Riga","Petrograd",4,false],["Riga","Wilno",4,false],
+  ["Wilno","Petrograd",4,false],["Wilno","Kiev",2,false],["Kiev","Smolensk",3,false],
+  ["Kiev","Kharkov",4,false],["Kiev","Bucarest",4,false],["Smolensk","Moscou",2,false],
+  ["Smolensk","Wilno",3,false],["Moscou","Petrograd",4,false],["Moscou","Kharkov",4,false],
+  ["Kharkov","Rostov",2,false],["Rostov","Sébastopol",4,false],["Rostov","Sochi",2,false],
+  ["Sébastopol","Bucarest",4,false],["Sébastopol","Sochi",2,false],
+  ["Erzurum","Sébastopol",4,false],["Erzurum","Sochi",3,false],
+];
+
+const GRAPH = {};
+for (const [a,b,w] of ROUTES) {
+  if (!GRAPH[a]) GRAPH[a]=[];
+  if (!GRAPH[b]) GRAPH[b]=[];
+  GRAPH[a].push([b,w]); GRAPH[b].push([a,w]);
+}
+
+const JEWELS = [
+  {a:"Stockholm",b:"Petrograd",w:8,pts:21,label:"Stockholm→Petrograd"},
+  {a:"Budapest",b:"Kiev",w:6,pts:15,label:"Budapest→Kiev"},
+  {a:"Palerme",b:"Smyrne",w:6,pts:15,label:"Palerme→Smyrne"},
+];
+
+const PTS = {1:1,2:2,3:4,4:7,5:10,6:15,7:15,8:21};
+
+const LONG_TICKETS = [
+  {name:"Brest → Petrograd",pts:20},{name:"Kobenhavn → Erzurum",pts:21},
+  {name:"Cadix → Stockholm",pts:21},{name:"Lisboa → Dantzig",pts:20},
+  {name:"Palerme → Moscou",pts:20},{name:"Edinburgh → Athènes",pts:21},
+];
+const SHORT_TICKETS = [
+  {name:"Athènes → Ankara",pts:5},{name:"Athènes → Wilno",pts:11},
+  {name:"Amsterdam → Pampelune",pts:7},{name:"Amsterdam → Wilno",pts:12},
+  {name:"Barcelone → Bruxelles",pts:8},{name:"Barcelone → Munich",pts:8},
+  {name:"Brest → Marseille",pts:7},{name:"Brest → Venise",pts:8},
+  {name:"Bruxelles → Dantzig",pts:9},{name:"Budapest → Sofia",pts:5},
+  {name:"Budapest → Sarajevo",pts:5},{name:"Edinburgh → Paris",pts:7},
+  {name:"Erzurum → Rostov",pts:5},{name:"Frankfurt → Kobenhavn",pts:5},
+  {name:"Kiev → Petrograd",pts:6},{name:"Kiev → Sochi",pts:8},
+  {name:"Kobenhavn → Essen",pts:4},{name:"Londres → Berlin",pts:7},
+  {name:"Londres → Vienne",pts:10},{name:"Madrid → Dieppe",pts:8},
+  {name:"Madrid → Zürich",pts:8},{name:"Marseille → Essen",pts:8},
+  {name:"Paris → Vienne",pts:8},{name:"Paris → Zagreb",pts:7},
+  {name:"Palerme → Constantinople",pts:8},{name:"Riga → Bucarest",pts:10},
+  {name:"Rome → Smyrne",pts:8},{name:"Sarajevo → Sébastopol",pts:8},
+  {name:"Smolensk → Rostov",pts:8},{name:"Smyrne → Petrograd",pts:8},
+  {name:"Sofia → Munich",pts:5},{name:"Sofia → Smyrne",pts:5},
+  {name:"Stockholm → Vienne",pts:11},{name:"Varsovie → Smolensk",pts:6},
+  {name:"Varsovie → Smyrne",pts:13},{name:"Venise → Constantinople",pts:10},
+  {name:"Zürich → Brindisi",pts:6},{name:"Zürich → Budapest",pts:6},
+  {name:"Zürich → Kobenhavn",pts:7},{name:"Berlin → Bucarest",pts:8},
+  {name:"Berlin → Moscou",pts:12},{name:"Essen → Kiev",pts:10},
+  {name:"Ankara → Kharkov",pts:10},{name:"Frankfurt → Smolensk",pts:13},
+];
+
+const TICKET_COLORS = ['#E63946','#2A9D8F','#457B9D','#6A4C93','#1B9E4B','#C0392B',
+  '#16A085','#8E44AD','#D35400','#2980B9'];
+
+function ptsByLen(n){return PTS[n]||0;}
+
+// ── GRAPH UTILS ───────────────────────────────────────────────────────────────
+function dijkstra(src,dst) {
+  const dist={},prev={},vis=new Set();
+  for(const n of Object.keys(CITIES))dist[n]=Infinity;
+  dist[src]=0; const pq=[[0,src]];
+  while(pq.length){
+    pq.sort((a,b)=>a[0]-b[0]);
+    const[d,u]=pq.shift();
+    if(vis.has(u))continue; vis.add(u);
+    if(u===dst)break;
+    for(const[v,w]of(GRAPH[u]||[])){
+      if(d+w<dist[v]){dist[v]=d+w;prev[v]=u;pq.push([dist[v],v]);}
+    }
+  }
+  if(dist[dst]===Infinity)return null;
+  const path=[];let c=dst;while(c){path.unshift(c);c=prev[c];}
+  return{path,cost:dist[dst]};
+}
+
+function segsFromPath(path){
+  const s=new Set();
+  for(let i=0;i<path.length-1;i++)s.add([path[i],path[i+1]].sort().join('|'));
+  return s;
+}
+
+function wagonsFromSegs(segs){
+  let w=0;
+  for(const k of segs){
+    const r=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
+    if(r)w+=r[2];
+  }
+  return w;
+}
+
+function ptsFromSegs(segs){
+  let p=0;
+  for(const k of segs){
+    const r=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
+    if(r)p+=ptsByLen(r[2]);
+  }
+  return p;
+}
+
+function isConnected(segs){
+  if(!segs.size)return true;
+  const adj={};
+  for(const k of segs){const[a,b]=k.split('|');(adj[a]||(adj[a]=new Set())).add(b);(adj[b]||(adj[b]=new Set())).add(a);}
+  const cities=Object.keys(adj),vis=new Set([cities[0]]),q=[cities[0]];
+  while(q.length){const u=q.shift();for(const v of(adj[u]||[]))if(!vis.has(v)){vis.add(v);q.push(v);}}
+  return vis.size===cities.size;
+}
+
+function areConnected(a,b,segs){
+  const adj={};
+  for(const k of segs){const[x,y]=k.split('|');(adj[x]||(adj[x]=new Set())).add(y);(adj[y]||(adj[y]=new Set())).add(x);}
+  const vis=new Set([a]),q=[a];
+  while(q.length){const u=q.shift();if(u===b)return true;for(const v of(adj[u]||[]))if(!vis.has(v)){vis.add(v);q.push(v);}}
+  return false;
+}
+
+// Construire le réseau depuis une séquence ordonnée de villes
+function buildNetworkFromSeq(seq){
+  let segs=new Set(),wagons=0;
+  for(let i=0;i<seq.length-1;i++){
+    if(seq[i]===seq[i+1])continue;
+    const r=dijkstra(seq[i],seq[i+1]);
+    if(!r)return null;
+    for(const sg of segsFromPath(r.path)){
+      if(!segs.has(sg)){
+        segs.add(sg);
+        const ro=ROUTES.find(ro=>[ro[0],ro[1]].sort().join('|')===sg);
+        wagons+=ro?ro[2]:0;
+      }
+    }
+    if(wagons>45)return null;
+  }
+  return{segs,wagons};
+}
+
+function ticketCities(name){
+  const parts = name.split(' → ');
+  return [parts[0].trim(), parts[parts.length-1].trim()];
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const S = {
+  step: 1,
+  freeMode: false,
+  longTicket: null,
+  shortTickets: [],
+  sequence: [],
+  network: null,
+};
+
+const COLORS = {
+  long: '#E63946',
+  shorts: ['#2A9D8F','#457B9D','#6A4C93'],
+};
+
+// ── CANVAS ────────────────────────────────────────────────────────────────────
+let canvas, ctx;
+
+let mapFullscreen = false;
+function toggleView(){
+  mapFullscreen = !mapFullscreen;
+  const mapArea = document.getElementById('mapArea');
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('toggleBtn');
+  if(mapFullscreen){
+    mapArea.classList.add('fullscreen');
+    sidebar.classList.add('hidden');
+    btn.textContent = '📋';
+    btn.title = 'Afficher les contrôles';
+  } else {
+    mapArea.classList.remove('fullscreen');
+    sidebar.classList.remove('hidden');
+    btn.textContent = '🗺';
+    btn.title = 'Agrandir la carte';
+  }
+  setTimeout(()=>{ resize(); draw(); }, 50);
+}
+
+function resize(){
+  const c=canvas.parentElement;
+  canvas.width=c.clientWidth;
+  canvas.height=c.clientHeight;
+  draw();
+}
+
+function cityPos(name){
+  const[rx,ry]=CITIES[name];
+  return[20+rx*(canvas.width-40), 20+(1-ry)*(canvas.height-40)];
+}
+
+function edgeW(len){return{1:.8,2:1.2,3:1.6,4:2,6:3,8:4}[len]||1.2;}
+
+function draw(){
+  if(!canvas.width)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#C8DDE8'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Collect highlighted segments
+  const hlSegs={}; // key -> [color,...]
+
+  // Network segments
+  if(S.network){
+    for(const k of S.network.segs){
+      if(!hlSegs[k])hlSegs[k]=[];
+      hlSegs[k].push('#FFD700');
+    }
+  }
+
+  // Sequence path segments
+  if(S.sequence.length>=2&&!S.network){
+    const net=buildNetworkFromSeq(S.sequence);
+    if(net){
+      for(const k of net.segs){
+        if(!hlSegs[k])hlSegs[k]=[];
+        hlSegs[k].push('#FFD700');
+      }
+    }
+  }
+
+  // Ticket paths (step 1)
+  if(S.step===1||S.step===2){
+    if(S.longTicket!==null){
+      const[a,b]=ticketCities(LONG_TICKETS[S.longTicket].name);
+      const r=dijkstra(a,b);
+      if(r) for(const k of segsFromPath(r.path)){
+        if(!hlSegs[k])hlSegs[k]=[];
+        hlSegs[k].push(COLORS.long);
+      }
+    }
+    S.shortTickets.forEach((idx,si)=>{
+      const[a,b]=ticketCities(SHORT_TICKETS[idx].name);
+      const r=dijkstra(a,b);
+      if(r) for(const k of segsFromPath(r.path)){
+        if(!hlSegs[k])hlSegs[k]=[];
+        hlSegs[k].push(COLORS.shorts[si]||'#888');
+      }
+    });
+  }
+
+  // Draw background routes
+  const drawn=new Set();
+  for(const[a,b,len,dbl]of ROUTES){
+    const k=[a,b].sort().join('|');
+    if(drawn.has(k))continue; drawn.add(k);
+    const[x1,y1]=cityPos(a),[x2,y2]=cityPos(b);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle='#B8C8D8'; ctx.lineWidth=edgeW(len)*.6;
+    ctx.setLineDash([]); ctx.stroke();
+    if(dbl){
+      const dx=x2-x1,dy=y2-y1,n=Math.sqrt(dx*dx+dy*dy);
+      const ox=-dy/n*3,oy=dx/n*3;
+      ctx.beginPath(); ctx.moveTo(x1+ox,y1+oy); ctx.lineTo(x2+ox,y2+oy);
+      ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+
+  // Draw highlighted routes
+  for(const[k,colors]of Object.entries(hlSegs)){
+    const[a,b]=k.split('|');
+    if(!CITIES[a]||!CITIES[b])continue;
+    const[x1,y1]=cityPos(a),[x2,y2]=cityPos(b);
+    const ro=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
+    const lw=edgeW(ro?ro[2]:2);
+    const n=colors.length;
+    const dx=x2-x1,dy=y2-y1,nm=Math.sqrt(dx*dx+dy*dy);
+    const ox=-dy/nm,oy=dx/nm;
+    colors.forEach((col,ci)=>{
+      const off=(ci-(n-1)/2)*4;
+      ctx.beginPath();
+      ctx.moveTo(x1+ox*off,y1+oy*off);
+      ctx.lineTo(x2+ox*off,y2+oy*off);
+      ctx.strokeStyle=col; ctx.lineWidth=lw*2; ctx.lineCap='round';
+      ctx.setLineDash([]); ctx.stroke();
+    });
+    // Length label
+    if(ro&&ro[2]>=3){
+      const mx=(x1+x2)/2,my=(y1+y2)/2;
+      ctx.fillStyle='rgba(0,0,0,.7)'; ctx.beginPath(); ctx.arc(mx,my,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='white'; ctx.font='bold 9px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(ro[2],mx,my);
+    }
+  }
+
+  // Draw cities
+  const importantCities=new Set();
+  if(S.longTicket!==null){ticketCities(LONG_TICKETS[S.longTicket].name).forEach(c=>importantCities.add(c));}
+  S.shortTickets.forEach(idx=>ticketCities(SHORT_TICKETS[idx].name).forEach(c=>importantCities.add(c)));
+  S.sequence.forEach(c=>importantCities.add(c));
+  JEWELS.forEach(j=>{importantCities.add(j.a);importantCities.add(j.b);});
+
+  for(const[name,[rx,ry]]of Object.entries(CITIES)){
+    const[x,y]=cityPos(name);
+    const imp=importantCities.has(name);
+    const inSeq=S.sequence.includes(name);
+    const size=inSeq?9:imp?6:3.5;
+    const col=inSeq?'#FF6B00':imp?'#1F4E79':'#8899AA';
+    ctx.beginPath(); ctx.arc(x,y,size,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.fill();
+    ctx.strokeStyle='white'; ctx.lineWidth=inSeq?2:1; ctx.stroke();
+
+    if(imp||inSeq){
+      const offsets={'Edinburgh':[-45,0],'Londres':[-45,0],'Brest':[-42,0],'Paris':[-10,12],
+        'Madrid':[-40,0],'Lisboa':[-42,0],'Cadix':[-35,-10],'Barcelone':[12,-10],
+        'Marseille':[12,8],'Frankfurt':[12,8],'Essen':[-10,12],'Kobenhavn':[12,8],
+        'Stockholm':[12,8],'Berlin':[12,8],'Dantzig':[12,8],'Riga':[12,8],
+        'Wilno':[12,8],'Varsovie':[-10,-14],'Petrograd':[12,8],'Moscou':[12,8],
+        'Smolensk':[12,8],'Kiev':[-38,8],'Kharkov':[12,8],'Rostov':[12,8],
+        'Sochi':[12,-12],'Zürich':[-38,8],'Munich':[-38,-10],'Vienne':[12,8],
+        'Venise':[-38,8],'Zagreb':[12,-12],'Budapest':[12,8],'Sarajevo':[-48,-10],
+        'Bucarest':[12,8],'Sofia':[-35,-13],'Sébastopol':[12,8],'Constantinople':[12,-13],
+        'Ankara':[12,8],'Erzurum':[12,8],'Smyrne':[12,-12],'Athènes':[-40,-10],
+        'Brindisi':[12,8],'Rome':[-38,8],'Palerme':[-40,-12],
+        'Amsterdam':[12,8],'Bruxelles':[12,8],'Dieppe':[0,12],
+        'Pampelune':[-10,-15],
+      };
+      const[ox,oy]=offsets[name]||[12,8];
+      ctx.font=`${inSeq?'bold ':''} ${inSeq?11:9}px Inter`;
+      ctx.fillStyle=inSeq?'#FF6B00':'#1F4E79';
+      ctx.textAlign=ox<0?'right':'left'; ctx.textBaseline='middle';
+      // Shadow
+      ctx.fillStyle='rgba(255,255,255,.8)';
+      ctx.fillText(name,x+ox+1,y+oy);
+      ctx.fillStyle=inSeq?'#FF6B00':'#1F4E79';
+      ctx.fillText(name,x+ox,y+oy);
+    }
+  }
+
+  // Sequence numbers on cities
+  S.sequence.forEach((city,i)=>{
+    const[x,y]=cityPos(city);
+    ctx.fillStyle='#FF6B00'; ctx.beginPath(); ctx.arc(x,y-14,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='white'; ctx.font='bold 10px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(i+1,x,y-14);
+  });
+
+  // Jewels indicators
+  if(S.step>=2){
+    JEWELS.forEach(j=>{
+      const[x1,y1]=cityPos(j.a),[x2,y2]=cityPos(j.b);
+      const mx=(x1+x2)/2,my=(y1+y2)/2;
+      // Only if not already in network
+      const k=[j.a,j.b].sort().join('|');
+      const used=S.network&&S.network.segs.has(k);
+      ctx.fillStyle=used?'rgba(30,107,60,.85)':'rgba(255,215,0,.85)';
+      ctx.font='bold 9px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(`⭐${j.pts}`,mx,my-12);
+    });
+  }
+}
+
+let canvas, ctx;
+
+window.addEventListener('DOMContentLoaded', function() {
+  canvas = document.getElementById('map');
+  ctx = canvas.getContext('2d');
+  canvas.addEventListener('click', handleMapClick);
+  window.addEventListener('resize', resize);
+  resize();
+  render();
+});
+
+function handleMapClick(e){
+  if(S.step!==2)return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+  const cx=mx*scaleX, cy=my*scaleY;
+
+  let best=null,bestD=20*Math.max(scaleX,scaleY);
+  for(const[name]of Object.entries(CITIES)){
+    const[px,py]=cityPos(name);
+    const d=Math.sqrt((px-cx)**2+(py-cy)**2);
+    if(d<bestD){bestD=d;best=name;}
+  }
+  if(!best)return;
+
+  if(S.sequence.length>0&&S.sequence[S.sequence.length-1]===best){
+    S.sequence.pop();
+  } else if(!S.sequence.includes(best)){
+    S.sequence.push(best);
+  }
+  render(); draw();
+});
+
+// ── RENDER SIDEBAR ────────────────────────────────────────────────────────────
+function render(){
+  const sb=document.getElementById('sidebar');
+  document.getElementById('step-indicator').textContent=`Étape ${S.step} / 4`;
+  ['s1','s2','s3','s4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.className='step'+(S.step===i+1?' active':S.step>i+1?' done':'');
+  });
+
+  if(S.step===1) renderStep1(sb);
+  else if(S.step===2) renderStep2(sb);
+  else if(S.step===3) renderStep3(sb);
+  else renderStep4(sb);
+}
+
+function renderStep1(sb){
+  const longIdx=S.longTicket;
+  sb.innerHTML=`
+    <div>
+      <div class="section-label">Mode de jeu</div>
+      <div class="ticket-card ${S.freeMode?'selected':''}" style="--tc:#8B2E0A" onclick="toggleFreeMode()">
+        <div class="check">✓</div>
+        <div class="t-header">
+          <div class="t-name">Parcours libre <span class="tag" style="background:#8B2E0A">Libre</span></div>
+          <div class="t-pts" style="color:#8B2E0A">+10 bonus</div>
+        </div>
+        <div class="t-meta">Maximiser les pts routes sans ticket — réseau connecté en 45 wagons</div>
+      </div>
+    </div>
+
+    ${!S.freeMode?`
+    <div>
+      <div class="section-label">Grand ticket (1 parmi 6)</div>
+      ${LONG_TICKETS.map((t,i)=>`
+        <div class="ticket-card long ${longIdx===i?'selected':''}" style="--tc:#E63946" onclick="selectLong(${i})">
+          <div class="check">✓</div>
+          <div class="t-header"><div class="t-name">${t.name}<span class="tag">Long</span></div><div class="t-pts">${t.pts}pts</div></div>
+        </div>`).join('')}
+    </div>
+    <div>
+      <div class="section-label">Tickets courts (3 max)</div>
+      <select onchange="addShort(this)">
+        <option value="">— Ajouter un ticket court —</option>
+        ${SHORT_TICKETS.map((t,i)=>S.shortTickets.includes(i)?'':
+          `<option value="${i}">${t.name} (${t.pts}pts)</option>`).join('')}
+      </select>
+      ${S.shortTickets.map((idx,si)=>`
+        <div class="ticket-card selected" style="--tc:${COLORS.shorts[si]}" onclick="removeShort(${si})">
+          <div class="check">✓</div>
+          <div class="t-header">
+            <div class="t-name">${SHORT_TICKETS[idx].name}</div>
+            <div class="t-pts" style="color:${COLORS.shorts[si]}">${SHORT_TICKETS[idx].pts}pts</div>
+          </div>
+          <div class="t-meta">Cliquer pour retirer</div>
+        </div>`).join('')}
+    </div>`:''}
+
+    <div class="btn-row">
+      <button class="btn primary" onclick="goStep(2)"
+        ${S.freeMode||longIdx!==null||S.shortTickets.length>0?'':'disabled'}>
+        Suivant → Construire le réseau
+      </button>
+    </div>`;
+
+  // Re-bind clicks on short tickets
+  sb.querySelectorAll('.ticket-card.selected').forEach((el,i)=>{
+    el.onclick=()=>{S.shortTickets.splice(i,1);render();draw();};
+  });
+}
+
+function renderStep2(sb){
+  const allTermini=S.freeMode?[]:([...new Set([
+    ...(S.longTicket!==null?ticketCities(LONG_TICKETS[S.longTicket].name):[]),
+    ...S.shortTickets.flatMap(idx=>ticketCities(SHORT_TICKETS[idx].name))
+  ])]);
+
+  const net=S.sequence.length>=2?buildNetworkFromSeq(S.sequence):null;
+  const wagons=net?net.wagons:0;
+  const connected=net?isConnected(net.segs):false;
+  // Check each ticket: all terminus must appear in network cities
+  const netCities=net?new Set([...net.segs].flatMap(k=>k.split('|'))):new Set();
+  const allTickets=[
+    ...(S.longTicket!==null?[LONG_TICKETS[S.longTicket]]:[]),
+    ...S.shortTickets.map(i=>SHORT_TICKETS[i])
+  ];
+  const ticketsOk=net?allTickets.every(t=>{
+    const[a,b]=ticketCities(t.name);
+    // First check cities are in network, then connectivity
+    if(!netCities.has(a)||!netCities.has(b)) return false;
+    return areConnected(a,b,net.segs);
+  }):false;
+
+  sb.innerHTML=`
+    <div class="info-box">
+      <strong>Clique sur les villes</strong> dans l'ordre souhaité pour construire ton enchaînement.<br>
+      Toutes les villes terminus doivent apparaître. Tu peux ajouter des villes intermédiaires.<br>
+      <em>Cliquer à nouveau sur la dernière ville la retire.</em>
+    </div>
+
+    <div>
+      <div class="section-label">Terminus obligatoires</div>
+      ${allTermini.map(c=>`
+        <div class="terminus-item">
+          <div class="terminus-num" style="background:${S.sequence.includes(c)?'#1E6B3C':'#AAA'}">${S.sequence.indexOf(c)>=0?S.sequence.indexOf(c)+1:'?'}</div>
+          <div class="terminus-name">${c}</div>
+          ${S.sequence.includes(c)?'<span style="color:var(--green);font-size:12px">✓</span>':'<span style="color:var(--ink3);font-size:11px">à placer</span>'}
+        </div>`).join('')}
+    </div>
+
+    <div>
+      <div class="section-label">Joyaux disponibles ⭐</div>
+      ${JEWELS.map(j=>{
+        const k=[j.a,j.b].sort().join('|');
+        const used=net&&net.segs.has(k);
+        return`<div class="jewel-row">
+          <div class="jewel-dot ${used?'used':''}"></div>
+          <div class="jewel-name">${j.label}</div>
+          <div class="jewel-badge">${j.w}w · ${j.pts}pts ${used?'✓':''}</div>
+        </div>`;}).join('')}
+    </div>
+
+    ${S.sequence.length>=2?`
+    <div>
+      <div class="section-label">Réseau en cours</div>
+      <div class="metrics">
+        <div class="metric ${wagons<=30?'good':wagons<=44?'warn':'bad'}">
+          <div class="m-label">Wagons</div>
+          <div class="m-val">${wagons}/45</div>
+        </div>
+        <div class="metric ${connected?'good':'bad'}">
+          <div class="m-label">Connecté</div>
+          <div class="m-val">${connected?'✓':'✗'}</div>
+        </div>
+        <div class="metric ${ticketsOk?'good':'warn'}">
+          <div class="m-label">Tickets</div>
+          <div class="m-val">${ticketsOk?'✓':'…'}</div>
+        </div>
+      </div>
+    </div>`:''}
+
+    <div class="btn-row">
+      <button class="btn" onclick="goStep(1)">← Retour</button>
+      <button class="btn" onclick="clearSequence()">Effacer</button>
+      <button class="btn primary" id="btn-validate" onclick="goStep(3)">
+        Valider le réseau →
+      </button>
+    </div>`;
+
+  // Enable/disable validate button after render
+  // Enable button if sequence has >= 2 cities and wagons ok
+  setTimeout(()=>{
+    const btn = document.getElementById('btn-validate');
+    if(btn) btn.disabled = !(net && wagons <= 45 && wagons > 0);
+  }, 50);
+}
+
+function renderStep3(sb){
+  const net=S.network;
+  if(!net){sb.innerHTML='<div>Erreur réseau</div>';return;}
+  const ptsR=ptsFromSegs(net.segs);
+
+  if(S.freeMode){
+    const score=ptsR+10;
+    const validLong=LONG_TICKETS.filter(t=>{
+      const[a,b]=ticketCities(t.name);
+      if(!CITIES[a]||!CITIES[b])return false;
+      return areConnected(a,b,net.segs);
+    }).sort((a,b)=>b.pts-a.pts);
+    const validShort=SHORT_TICKETS.filter(t=>{
+      const[a,b]=ticketCities(t.name);
+      if(!CITIES[a]||!CITIES[b])return false;
+      return areConnected(a,b,net.segs);
+    }).sort((a,b)=>b.pts-a.pts);
+    const bestLong=validLong[0]||null;
+    const best3Short=validShort.slice(0,3);
+    const bonusTotal=(bestLong?bestLong.pts:0)+best3Short.reduce((s,t)=>s+t.pts,0);
+
+    sb.innerHTML=`
+      <div>
+        <div class="section-label">Réseau libre ✓</div>
+        <div class="metrics">
+          <div class="metric good"><div class="m-label">Wagons</div><div class="m-val">${net.wagons}/45</div><div class="m-sub">${45-net.wagons} restants</div></div>
+          <div class="metric good"><div class="m-label">Pts routes</div><div class="m-val">${ptsR}</div></div>
+          <div class="metric good"><div class="m-label">Total</div><div class="m-val">${score}</div><div class="m-sub">${ptsR} routes + 10 bonus</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Meilleure combinaison tickets (1 long + 3 courts max)</div>
+        ${bonusTotal>0?`
+          <div class="info-box good" style="margin-bottom:6px">
+            Bonus potentiel : <strong>+${bonusTotal} pts</strong> → score total <strong>${score+bonusTotal} pts</strong>
+          </div>
+          ${bestLong?`<div class="ticket-card" style="--tc:#E63946">
+            <div class="t-header">
+              <div class="t-name">${bestLong.name}<span class="tag">Long</span></div>
+              <div class="t-pts" style="color:#E63946">+${bestLong.pts}pts</div>
+            </div>
+          </div>`:''}
+          ${best3Short.map(t=>`
+            <div class="ticket-card" style="--tc:var(--green)">
+              <div class="t-header">
+                <div class="t-name">${t.name}</div>
+                <div class="t-pts" style="color:var(--green)">+${t.pts}pts</div>
+              </div>
+            </div>`).join('')}
+          ${validLong.length>1||validShort.length>3?`<div style="font-size:11px;color:var(--ink3);margin-top:4px">${validLong.length} grand(s) et ${validShort.length} court(s) validés — affichage limité à la combinaison optimale.</div>`:''}`
+        :`<div class="info-box warn">Aucun ticket validé par ce réseau.</div>`}
+      </div>
+      <div>
+        <div class="section-label">Joyaux intégrés</div>
+        ${JEWELS.map(j=>{
+          const k=[j.a,j.b].sort().join('|');
+          const used=net.segs.has(k);
+          return`<div class="jewel-row">
+            <div class="jewel-dot ${used?'used':''}"></div>
+            <div class="jewel-name">${j.label}</div>
+            <div class="jewel-badge">${used?`+${j.pts}pts ✓`:'non utilisé'}</div>
+          </div>`;}).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(2)">← Modifier</button>
+        <button class="btn primary" onclick="goStep(4)">Analyse →</button>
+      </div>`;
+    return;
+  }
+  const tickets=[
+    ...(S.longTicket!==null?[LONG_TICKETS[S.longTicket]]:[] ),
+    ...S.shortTickets.map(i=>SHORT_TICKETS[i])
+  ];
+  const ticketResults=tickets.map(t=>{
+    const[a,b]=ticketCities(t.name);
+    const ok=areConnected(a,b,net.segs);
+    return{...t,ok,score:ok?t.pts:-t.pts};
+  });
+  const ptsT=ticketResults.reduce((s,t)=>s+t.score,0);
+  const score=ptsR+ptsT+10;
+
+  sb.innerHTML=`
+    <div>
+      <div class="section-label">Réseau validé ✓</div>
+      <div class="metrics">
+        <div class="metric good"><div class="m-label">Wagons</div><div class="m-val">${net.wagons}/45</div><div class="m-sub">${45-net.wagons} restants</div></div>
+        <div class="metric good"><div class="m-label">Pts routes</div><div class="m-val">${ptsR}</div></div>
+        <div class="metric good"><div class="m-label">Score total</div><div class="m-val">${score}</div><div class="m-sub">${ptsT} tickets + ${ptsR} routes + 10</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Tickets</div>
+      ${ticketResults.map(t=>`
+        <div class="ticket-card" style="--tc:${t.ok?'var(--green)':'var(--red)'}">
+          <div class="t-header">
+            <div class="t-name">${t.name}</div>
+            <div class="t-pts" style="color:${t.ok?'var(--green)':'var(--red)'}">${t.ok?'+':'−'}${t.pts}pts</div>
+          </div>
+          <div class="t-meta">${t.ok?'✓ Complété':'✗ Non réalisé — malus −'+t.pts+' pts'}</div>
+        </div>`).join('')}
+    </div>
+
+    <div>
+      <div class="section-label">Joyaux intégrés</div>
+      ${JEWELS.map(j=>{
+        const k=[j.a,j.b].sort().join('|');
+        const used=net.segs.has(k);
+        return`<div class="jewel-row">
+          <div class="jewel-dot ${used?'used':''}"></div>
+          <div class="jewel-name">${j.label}</div>
+          <div class="jewel-badge">${used?`+${j.pts}pts ✓`:'non utilisé'}</div>
+        </div>`;}).join('')}
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="goStep(2)">← Modifier</button>
+      <button class="btn primary" onclick="goStep(4)">Analyse complète →</button>
+    </div>`;
+}
+
+function renderStep4(sb){
+  const net=S.network;
+  if(!net){sb.innerHTML='<div>Erreur</div>';return;}
+  const ptsR=ptsFromSegs(net.segs);
+  const wagonsLeft=45-net.wagons;
+
+  if(S.freeMode){
+    const score=ptsR+10;
+    // Tickets validés par le réseau
+    const validLong=LONG_TICKETS.filter(t=>{
+      const[a,b]=ticketCities(t.name);
+      if(!CITIES[a]||!CITIES[b])return false;
+      return areConnected(a,b,net.segs);
+    }).sort((a,b)=>b.pts-a.pts);
+    const validShort=SHORT_TICKETS.filter(t=>{
+      const[a,b]=ticketCities(t.name);
+      if(!CITIES[a]||!CITIES[b])return false;
+      return areConnected(a,b,net.segs);
+    }).sort((a,b)=>b.pts-a.pts);
+
+    // Meilleure combinaison : 1 long + 3 courts max
+    const bestLong=validLong[0]||null;
+    const best3Short=validShort.slice(0,3);
+    const bonusTotal=(bestLong?bestLong.pts:0)+best3Short.reduce((s,t)=>s+t.pts,0);
+
+    sb.innerHTML=`
+      <div>
+        <div class="section-label">Score libre</div>
+        <div class="metrics">
+          <div class="metric good"><div class="m-label">Wagons</div><div class="m-val">${net.wagons}/45</div></div>
+          <div class="metric good"><div class="m-label">Pts routes</div><div class="m-val">${ptsR}</div></div>
+          <div class="metric good"><div class="m-label">Total</div><div class="m-val">${score}</div><div class="m-sub">+10 bonus</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Meilleure combinaison de tickets (1 long + 3 courts max)</div>
+        ${bonusTotal>0?`
+          <div class="info-box good" style="margin-bottom:6px">
+            Si tu avais tiré ces tickets : <strong>+${bonusTotal} pts</strong> supplémentaires → score total <strong>${score+bonusTotal} pts</strong>
+          </div>
+          ${bestLong?`<div class="ticket-card" style="--tc:#E63946">
+            <div class="t-header">
+              <div class="t-name">${bestLong.name}<span class="tag">Long</span></div>
+              <div class="t-pts" style="color:#E63946">+${bestLong.pts}pts</div>
+            </div>
+          </div>`:''}
+          ${best3Short.map(t=>`
+            <div class="ticket-card" style="--tc:var(--green)">
+              <div class="t-header">
+                <div class="t-name">${t.name}</div>
+                <div class="t-pts" style="color:var(--green)">+${t.pts}pts</div>
+              </div>
+            </div>`).join('')}
+          ${validLong.length>1||validShort.length>3?`
+            <div class="t-meta" style="margin-top:4px;color:var(--ink3)">
+              ${validLong.length} grand(s) ticket(s) et ${validShort.length} ticket(s) court(s) validés au total — affichage limité à la combinaison optimale.
+            </div>`:''}
+        `:`<div class="info-box warn">Aucun ticket validé par ce réseau.</div>`}
+      </div>
+      ${wagonsLeft>0?`<div class="info-box" style="margin-top:8px">Tu as encore <strong>${wagonsLeft} wagons</strong> disponibles.</div>`:''}
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn" onclick="goStep(2)">← Modifier</button>
+        <button class="btn danger" onclick="resetAll()">↺ Nouveau</button>
+      </div>`;
+    return;
+  }
+
+  const tickets=[
+    ...(S.longTicket!==null?[LONG_TICKETS[S.longTicket]]:[] ),
+    ...S.shortTickets.map(i=>SHORT_TICKETS[i])
+  ];
+  const ticketResults=tickets.map(t=>{
+    const[a,b]=ticketCities(t.name);
+    const ok=areConnected(a,b,net.segs);
+    return{...t,ok,score:ok?t.pts:-t.pts};
+  });
+  const ptsT=ticketResults.reduce((s,t)=>s+t.score,0);
+  const score=ptsR+ptsT+10;
+
+  // Joyaux non encore intégrés
+  const missingJewels=JEWELS.filter(j=>{
+    const k=[j.a,j.b].sort().join('|');
+    return !net.segs.has(k);
+  });
+
+  // Liaisons adjacentes rentables dans le budget restant
+  const adj=[];
+  for(const[a,b,len]of ROUTES){
+    const k=[a,b].sort().join('|');
+    if(net.segs.has(k))continue;
+    if(len>wagonsLeft)continue;
+    // Must be adjacent to network
+    const netCities=new Set([...net.segs].flatMap(k=>k.split('|')));
+    if(!netCities.has(a)&&!netCities.has(b))continue;
+    adj.push({a,b,len,pts:ptsByLen(len),ratio:(ptsByLen(len)/len).toFixed(1)});
+  }
+  adj.sort((x,y)=>y.pts-x.pts);
+
+  // Goulots
+  const singleSegs=[...net.segs].filter(k=>{
+    const r=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
+    return r&&!r[3]&&r[2]>=4;
+  });
+
+  sb.innerHTML=`
+    <div>
+      <div class="section-label">Score final</div>
+      <div class="metrics">
+        <div class="metric good"><div class="m-label">Tickets</div><div class="m-val">${ptsT}</div></div>
+        <div class="metric good"><div class="m-label">Routes</div><div class="m-val">${ptsR}</div></div>
+        <div class="metric good"><div class="m-label">Total</div><div class="m-val">${score}</div><div class="m-sub">+10 bonus</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Wagons restants : ${wagonsLeft}</div>
+      ${wagonsLeft>0?`
+        ${missingJewels.filter(j=>j.w<=wagonsLeft).length>0?`
+        <div class="info-box good" style="margin-bottom:6px">
+          <strong>Joyaux accessibles :</strong><br>
+          ${missingJewels.filter(j=>j.w<=wagonsLeft).map(j=>
+            `<span style="cursor:pointer;text-decoration:underline;color:var(--green)"
+              onclick="addJewel('${j.a}','${j.b}')">⭐ ${j.label} (${j.w}w → +${j.pts}pts)</span>`
+          ).join('<br>')}
+        </div>`:''}
+        <div class="info-box" style="margin-bottom:6px">
+          <strong>Meilleures liaisons adjacentes :</strong><br>
+          ${adj.slice(0,5).map(r=>
+            `<span style="cursor:pointer;text-decoration:underline;color:var(--blue)"
+              onclick="addRoute('${r.a}','${r.b}')">
+              ${r.a}—${r.b} (${r.len}w → +${r.pts}pts)
+            </span>`
+          ).join('<br>')}
+        </div>`
+      :`<div class="info-box good">Budget parfaitement utilisé !</div>`}
+    </div>
+
+    ${singleSegs.length?`
+    <div>
+      <div class="section-label">Goulots à surveiller</div>
+      <div class="seg-list">${singleSegs.map(k=>{
+        const[a,b]=k.split('|');
+        return`<span>${a} — ${b}</span>`;
+      }).join(' ')}</div>
+      <div class="info-box warn" style="margin-top:6px">Liaisons simples critiques — construire en priorité !</div>
+    </div>`:''}
+
+    <div class="btn-row">
+      <button class="btn" onclick="goStep(2)">← Modifier</button>
+      <button class="btn danger" onclick="resetAll()">↺ Nouveau tirage</button>
+    </div>`;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function selectLong(i){S.longTicket=S.longTicket===i?null:i;render();draw();}
+function addShort(sel){
+  if(sel.value===''||S.shortTickets.length>=3)return;
+  S.shortTickets.push(parseInt(sel.value));
+  sel.value='';
+  render();draw();
+}
+function removeShort(si){S.shortTickets.splice(si,1);render();draw();}
+
+function goStep(n){
+  if(n===3){
+    const net=buildNetworkFromSeq(S.sequence);
+    if(!net){alert('Réseau invalide — trop de wagons ou chemin impossible');return;}
+    S.network=net;
+  }
+  S.step=n;
+  render();draw();
+}
+
+function addJewel(a,b){
+  const net=S.network;
+  if(!net)return;
+  // Build path a→b and add to network
+  const r=dijkstra(a,b);
+  if(!r)return;
+  let wagons=net.wagons;
+  for(const seg of segsFromPath(r.path)){
+    if(!net.segs.has(seg)){
+      net.segs.add(seg);
+      const ro=ROUTES.find(ro=>[ro[0],ro[1]].sort().join('|')===seg);
+      wagons+=ro?ro[2]:0;
+    }
+  }
+  if(wagons>45){alert('Pas assez de wagons !');return;}
+  net.wagons=wagons;
+  render();draw();
+}
+
+function addRoute(a,b){
+  addJewel(a,b); // same logic
+}
+
+function clearSequence(){S.sequence.length=0;render();draw();}
+
+function toggleFreeMode(){
+  S.freeMode=!S.freeMode;
+  if(S.freeMode){S.longTicket=null;S.shortTickets=[];}
+  render();draw();
+}
+
+function resetAll(){
+  S.step=1;S.freeMode=false;S.longTicket=null;S.shortTickets=[];S.sequence=[];S.network=null;
+  render();draw();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Init handled by DOMContentLoaded above
