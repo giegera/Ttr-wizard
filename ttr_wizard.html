@@ -179,7 +179,6 @@ const JEWELS = [
 ];
 
 const PTS = {1:1,2:2,3:4,4:7,5:10,6:15,7:15,8:21};
-function ptsByLen(n){return PTS[n]||0;}
 
 const LONG_TICKETS = [
   {name:"Brest → Petrograd",pts:20},{name:"Kobenhavn → Erzurum",pts:21},
@@ -213,6 +212,8 @@ const SHORT_TICKETS = [
 
 const TICKET_COLORS = ['#E63946','#2A9D8F','#457B9D','#6A4C93','#1B9E4B','#C0392B',
   '#16A085','#8E44AD','#D35400','#2980B9'];
+
+function ptsByLen(n){return PTS[n]||0;}
 
 // ── GRAPH UTILS ───────────────────────────────────────────────────────────────
 function dijkstra(src,dst) {
