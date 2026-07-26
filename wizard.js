@@ -1,6 +1,8 @@
+// Aventuriers du Rail Europe — Wizard Stratégique
+// Rendu entièrement par manipulation DOM (pas de template literals HTML)
 
 // ── DATA ──────────────────────────────────────────────────────────────────────
-const CITIES = {
+var CITIES = {
   "Edinburgh":[.10,.92],"Londres":[.13,.83],"Brest":[.09,.72],"Dieppe":[.17,.76],
   "Paris":[.22,.72],"Amsterdam":[.26,.84],"Bruxelles":[.24,.78],"Pampelune":[.18,.62],
   "Madrid":[.13,.53],"Lisboa":[.05,.50],"Cadix":[.10,.44],"Barcelone":[.22,.56],
@@ -12,10 +14,10 @@ const CITIES = {
   "Venise":[.36,.63],"Zagreb":[.40,.63],"Budapest":[.44,.66],"Sarajevo":[.43,.57],
   "Bucarest":[.52,.60],"Sofia":[.48,.52],"Sébastopol":[.60,.54],"Constantinople":[.55,.45],
   "Ankara":[.63,.43],"Erzurum":[.73,.40],"Smyrne":[.58,.38],"Athènes":[.48,.38],
-  "Brindisi":[.42,.48],"Rome":[.36,.52],"Palerme":[.37,.43],
+  "Brindisi":[.42,.48],"Rome":[.36,.52],"Palerme":[.37,.43]
 };
 
-const ROUTES = [
+var ROUTES = [
   ["Edinburgh","Londres",4,true],["Londres","Dieppe",2,true],["Londres","Amsterdam",2,false],
   ["Amsterdam","Bruxelles",1,false],["Amsterdam","Essen",3,false],["Amsterdam","Frankfurt",2,false],
   ["Bruxelles","Dieppe",2,false],["Bruxelles","Frankfurt",2,false],["Bruxelles","Paris",2,true],
@@ -46,890 +48,885 @@ const ROUTES = [
   ["Smolensk","Wilno",3,false],["Moscou","Petrograd",4,false],["Moscou","Kharkov",4,false],
   ["Kharkov","Rostov",2,false],["Rostov","Sébastopol",4,false],["Rostov","Sochi",2,false],
   ["Sébastopol","Bucarest",4,false],["Sébastopol","Sochi",2,false],
-  ["Erzurum","Sébastopol",4,false],["Erzurum","Sochi",3,false],
+  ["Erzurum","Sébastopol",4,false],["Erzurum","Sochi",3,false]
 ];
 
-const GRAPH = {};
-for (const [a,b,w] of ROUTES) {
-  if (!GRAPH[a]) GRAPH[a]=[];
-  if (!GRAPH[b]) GRAPH[b]=[];
-  GRAPH[a].push([b,w]); GRAPH[b].push([a,w]);
-}
-
-const JEWELS = [
-  {a:"Stockholm",b:"Petrograd",w:8,pts:21,label:"Stockholm→Petrograd"},
-  {a:"Budapest",b:"Kiev",w:6,pts:15,label:"Budapest→Kiev"},
-  {a:"Palerme",b:"Smyrne",w:6,pts:15,label:"Palerme→Smyrne"},
+var JEWELS = [
+  {a:"Stockholm",b:"Petrograd",w:8,pts:21,label:"Stockholm\u2192Petrograd"},
+  {a:"Budapest",b:"Kiev",w:6,pts:15,label:"Budapest\u2192Kiev"},
+  {a:"Palerme",b:"Smyrne",w:6,pts:15,label:"Palerme\u2192Smyrne"}
 ];
 
-const PTS = {1:1,2:2,3:4,4:7,5:10,6:15,7:15,8:21};
+var PTS = {1:1,2:2,3:4,4:7,5:10,6:15,7:15,8:21};
 
-const LONG_TICKETS = [
-  {name:"Brest → Petrograd",pts:20},{name:"Kobenhavn → Erzurum",pts:21},
-  {name:"Cadix → Stockholm",pts:21},{name:"Lisboa → Dantzig",pts:20},
-  {name:"Palerme → Moscou",pts:20},{name:"Edinburgh → Athènes",pts:21},
-];
-const SHORT_TICKETS = [
-  {name:"Athènes → Ankara",pts:5},{name:"Athènes → Wilno",pts:11},
-  {name:"Amsterdam → Pampelune",pts:7},{name:"Amsterdam → Wilno",pts:12},
-  {name:"Barcelone → Bruxelles",pts:8},{name:"Barcelone → Munich",pts:8},
-  {name:"Brest → Marseille",pts:7},{name:"Brest → Venise",pts:8},
-  {name:"Bruxelles → Dantzig",pts:9},{name:"Budapest → Sofia",pts:5},
-  {name:"Budapest → Sarajevo",pts:5},{name:"Edinburgh → Paris",pts:7},
-  {name:"Erzurum → Rostov",pts:5},{name:"Frankfurt → Kobenhavn",pts:5},
-  {name:"Kiev → Petrograd",pts:6},{name:"Kiev → Sochi",pts:8},
-  {name:"Kobenhavn → Essen",pts:4},{name:"Londres → Berlin",pts:7},
-  {name:"Londres → Vienne",pts:10},{name:"Madrid → Dieppe",pts:8},
-  {name:"Madrid → Zürich",pts:8},{name:"Marseille → Essen",pts:8},
-  {name:"Paris → Vienne",pts:8},{name:"Paris → Zagreb",pts:7},
-  {name:"Palerme → Constantinople",pts:8},{name:"Riga → Bucarest",pts:10},
-  {name:"Rome → Smyrne",pts:8},{name:"Sarajevo → Sébastopol",pts:8},
-  {name:"Smolensk → Rostov",pts:8},{name:"Smyrne → Petrograd",pts:8},
-  {name:"Sofia → Munich",pts:5},{name:"Sofia → Smyrne",pts:5},
-  {name:"Stockholm → Vienne",pts:11},{name:"Varsovie → Smolensk",pts:6},
-  {name:"Varsovie → Smyrne",pts:13},{name:"Venise → Constantinople",pts:10},
-  {name:"Zürich → Brindisi",pts:6},{name:"Zürich → Budapest",pts:6},
-  {name:"Zürich → Kobenhavn",pts:7},{name:"Berlin → Bucarest",pts:8},
-  {name:"Berlin → Moscou",pts:12},{name:"Essen → Kiev",pts:10},
-  {name:"Ankara → Kharkov",pts:10},{name:"Frankfurt → Smolensk",pts:13},
+var LONG_TICKETS = [
+  {name:"Brest \u2192 Petrograd",pts:20},{name:"Kobenhavn \u2192 Erzurum",pts:21},
+  {name:"Cadix \u2192 Stockholm",pts:21},{name:"Lisboa \u2192 Dantzig",pts:20},
+  {name:"Palerme \u2192 Moscou",pts:20},{name:"Edinburgh \u2192 Ath\u00e8nes",pts:21}
 ];
 
-const TICKET_COLORS = ['#E63946','#2A9D8F','#457B9D','#6A4C93','#1B9E4B','#C0392B',
-  '#16A085','#8E44AD','#D35400','#2980B9'];
+var SHORT_TICKETS = [
+  {name:"Ath\u00e8nes \u2192 Ankara",pts:5},{name:"Ath\u00e8nes \u2192 Wilno",pts:11},
+  {name:"Amsterdam \u2192 Pampelune",pts:7},{name:"Amsterdam \u2192 Wilno",pts:12},
+  {name:"Barcelone \u2192 Bruxelles",pts:8},{name:"Barcelone \u2192 Munich",pts:8},
+  {name:"Brest \u2192 Marseille",pts:7},{name:"Brest \u2192 Venise",pts:8},
+  {name:"Bruxelles \u2192 Dantzig",pts:9},{name:"Budapest \u2192 Sofia",pts:5},
+  {name:"Budapest \u2192 Sarajevo",pts:5},{name:"Edinburgh \u2192 Paris",pts:7},
+  {name:"Erzurum \u2192 Rostov",pts:5},{name:"Frankfurt \u2192 Kobenhavn",pts:5},
+  {name:"Kiev \u2192 Petrograd",pts:6},{name:"Kiev \u2192 Sochi",pts:8},
+  {name:"Kobenhavn \u2192 Essen",pts:4},{name:"Londres \u2192 Berlin",pts:7},
+  {name:"Londres \u2192 Vienne",pts:10},{name:"Madrid \u2192 Dieppe",pts:8},
+  {name:"Madrid \u2192 Z\u00fcrich",pts:8},{name:"Marseille \u2192 Essen",pts:8},
+  {name:"Paris \u2192 Vienne",pts:8},{name:"Paris \u2192 Zagreb",pts:7},
+  {name:"Palerme \u2192 Constantinople",pts:8},{name:"Riga \u2192 Bucarest",pts:10},
+  {name:"Rome \u2192 Smyrne",pts:8},{name:"Sarajevo \u2192 S\u00e9bastopol",pts:8},
+  {name:"Smolensk \u2192 Rostov",pts:8},{name:"Smyrne \u2192 Petrograd",pts:8},
+  {name:"Sofia \u2192 Munich",pts:5},{name:"Sofia \u2192 Smyrne",pts:5},
+  {name:"Stockholm \u2192 Vienne",pts:11},{name:"Varsovie \u2192 Smolensk",pts:6},
+  {name:"Varsovie \u2192 Smyrne",pts:13},{name:"Venise \u2192 Constantinople",pts:10},
+  {name:"Z\u00fcrich \u2192 Brindisi",pts:6},{name:"Z\u00fcrich \u2192 Budapest",pts:6},
+  {name:"Z\u00fcrich \u2192 Kobenhavn",pts:7},{name:"Berlin \u2192 Bucarest",pts:8},
+  {name:"Berlin \u2192 Moscou",pts:12},{name:"Essen \u2192 Kiev",pts:10},
+  {name:"Ankara \u2192 Kharkov",pts:10},{name:"Frankfurt \u2192 Smolensk",pts:13}
+];
 
-function ptsByLen(n){return PTS[n]||0;}
+var COLORS = {long:'#E63946', shorts:['#2A9D8F','#457B9D','#6A4C93']};
 
-// ── GRAPH UTILS ───────────────────────────────────────────────────────────────
-function dijkstra(src,dst) {
-  const dist={},prev={},vis=new Set();
-  for(const n of Object.keys(CITIES))dist[n]=Infinity;
-  dist[src]=0; const pq=[[0,src]];
-  while(pq.length){
-    pq.sort((a,b)=>a[0]-b[0]);
-    const[d,u]=pq.shift();
-    if(vis.has(u))continue; vis.add(u);
-    if(u===dst)break;
-    for(const[v,w]of(GRAPH[u]||[])){
-      if(d+w<dist[v]){dist[v]=d+w;prev[v]=u;pq.push([dist[v],v]);}
-    }
+// ── GRAPH ──────────────────────────────────────────────────────────────────────
+var GRAPH = {};
+ROUTES.forEach(function(r) {
+  var a = r[0], b = r[1], w = r[2];
+  if (!GRAPH[a]) GRAPH[a] = [];
+  if (!GRAPH[b]) GRAPH[b] = [];
+  GRAPH[a].push([b,w]);
+  GRAPH[b].push([a,w]);
+});
+
+function ptsByLen(n) { return PTS[n] || 0; }
+
+function dijkstra(src, dst) {
+  var dist = {}, prev = {}, vis = {};
+  Object.keys(CITIES).forEach(function(n) { dist[n] = Infinity; });
+  dist[src] = 0;
+  var pq = [[0, src]];
+  while (pq.length) {
+    pq.sort(function(a,b){return a[0]-b[0];});
+    var du = pq.shift(), d = du[0], u = du[1];
+    if (vis[u]) continue;
+    vis[u] = true;
+    if (u === dst) break;
+    (GRAPH[u] || []).forEach(function(vw) {
+      var v = vw[0], w = vw[1];
+      if (d + w < dist[v]) { dist[v] = d+w; prev[v] = u; pq.push([dist[v], v]); }
+    });
   }
-  if(dist[dst]===Infinity)return null;
-  const path=[];let c=dst;while(c){path.unshift(c);c=prev[c];}
-  return{path,cost:dist[dst]};
+  if (dist[dst] === Infinity) return null;
+  var path = [], c = dst;
+  while (c) { path.unshift(c); c = prev[c]; }
+  return {path: path, cost: dist[dst]};
 }
 
-function segsFromPath(path){
-  const s=new Set();
-  for(let i=0;i<path.length-1;i++)s.add([path[i],path[i+1]].sort().join('|'));
+function segsFromPath(path) {
+  var s = {};
+  for (var i = 0; i < path.length-1; i++) {
+    var key = [path[i], path[i+1]].sort().join('|');
+    s[key] = true;
+  }
   return s;
 }
 
-function wagonsFromSegs(segs){
-  let w=0;
-  for(const k of segs){
-    const r=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
-    if(r)w+=r[2];
-  }
+function wagonsFromSegs(segs) {
+  var w = 0;
+  Object.keys(segs).forEach(function(k) {
+    var r = ROUTES.filter(function(r){ return [r[0],r[1]].sort().join('|') === k; })[0];
+    if (r) w += r[2];
+  });
   return w;
 }
 
-function ptsFromSegs(segs){
-  let p=0;
-  for(const k of segs){
-    const r=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
-    if(r)p+=ptsByLen(r[2]);
-  }
+function ptsFromSegs(segs) {
+  var p = 0;
+  Object.keys(segs).forEach(function(k) {
+    var r = ROUTES.filter(function(r){ return [r[0],r[1]].sort().join('|') === k; })[0];
+    if (r) p += ptsByLen(r[2]);
+  });
   return p;
 }
 
-function isConnected(segs){
-  if(!segs.size)return true;
-  const adj={};
-  for(const k of segs){const[a,b]=k.split('|');(adj[a]||(adj[a]=new Set())).add(b);(adj[b]||(adj[b]=new Set())).add(a);}
-  const cities=Object.keys(adj),vis=new Set([cities[0]]),q=[cities[0]];
-  while(q.length){const u=q.shift();for(const v of(adj[u]||[]))if(!vis.has(v)){vis.add(v);q.push(v);}}
-  return vis.size===cities.size;
+function isConnected(segs) {
+  var keys = Object.keys(segs);
+  if (!keys.length) return true;
+  var adj = {};
+  keys.forEach(function(k) {
+    var ab = k.split('|'), a = ab[0], b = ab[1];
+    if (!adj[a]) adj[a] = [];
+    if (!adj[b]) adj[b] = [];
+    adj[a].push(b); adj[b].push(a);
+  });
+  var cities = Object.keys(adj);
+  var vis = {}, q = [cities[0]];
+  vis[cities[0]] = true;
+  while (q.length) {
+    var u = q.shift();
+    (adj[u] || []).forEach(function(v) { if (!vis[v]) { vis[v]=true; q.push(v); } });
+  }
+  return Object.keys(vis).length === cities.length;
 }
 
-function areConnected(a,b,segs){
-  const adj={};
-  for(const k of segs){const[x,y]=k.split('|');(adj[x]||(adj[x]=new Set())).add(y);(adj[y]||(adj[y]=new Set())).add(x);}
-  const vis=new Set([a]),q=[a];
-  while(q.length){const u=q.shift();if(u===b)return true;for(const v of(adj[u]||[]))if(!vis.has(v)){vis.add(v);q.push(v);}}
+function areConnected(a, b, segs) {
+  var adj = {};
+  Object.keys(segs).forEach(function(k) {
+    var ab = k.split('|'), x = ab[0], y = ab[1];
+    if (!adj[x]) adj[x] = [];
+    if (!adj[y]) adj[y] = [];
+    adj[x].push(y); adj[y].push(x);
+  });
+  var vis = {}, q = [a];
+  vis[a] = true;
+  while (q.length) {
+    var u = q.shift();
+    if (u === b) return true;
+    (adj[u] || []).forEach(function(v) { if (!vis[v]) { vis[v]=true; q.push(v); } });
+  }
   return false;
 }
 
-// Construire le réseau depuis une séquence ordonnée de villes
-function buildNetworkFromSeq(seq){
-  let segs=new Set(),wagons=0;
-  for(let i=0;i<seq.length-1;i++){
-    if(seq[i]===seq[i+1])continue;
-    const r=dijkstra(seq[i],seq[i+1]);
-    if(!r)return null;
-    for(const sg of segsFromPath(r.path)){
-      if(!segs.has(sg)){
-        segs.add(sg);
-        const ro=ROUTES.find(ro=>[ro[0],ro[1]].sort().join('|')===sg);
-        wagons+=ro?ro[2]:0;
-      }
-    }
-    if(wagons>45)return null;
-  }
-  return{segs,wagons};
-}
-
-function ticketCities(name){
-  const parts = name.split(' → ');
+function ticketCities(name) {
+  var parts = name.split(' \u2192 ');
   return [parts[0].trim(), parts[parts.length-1].trim()];
 }
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
-const S = {
+function buildNetworkFromSeq(seq) {
+  var segs = {}, wagons = 0;
+  for (var i = 0; i < seq.length-1; i++) {
+    if (seq[i] === seq[i+1]) continue;
+    var r = dijkstra(seq[i], seq[i+1]);
+    if (!r) return null;
+    var newSegs = segsFromPath(r.path);
+    Object.keys(newSegs).forEach(function(sg) {
+      if (!segs[sg]) {
+        segs[sg] = true;
+        var ro = ROUTES.filter(function(ro){ return [ro[0],ro[1]].sort().join('|') === sg; })[0];
+        wagons += ro ? ro[2] : 0;
+      }
+    });
+    if (wagons > 45) return null;
+  }
+  return {segs: segs, wagons: wagons};
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+var S = {
   step: 1,
   freeMode: false,
   longTicket: null,
   shortTickets: [],
   sequence: [],
-  network: null,
+  network: null
 };
 
-const COLORS = {
-  long: '#E63946',
-  shorts: ['#2A9D8F','#457B9D','#6A4C93'],
-};
+// ── CANVAS ──────────────────────────────────────────────────────────────────────
+var canvas, ctx;
 
-// ── CANVAS ────────────────────────────────────────────────────────────────────
-
-let mapFullscreen = false;
-function toggleView(){
-  mapFullscreen = !mapFullscreen;
-  const mapArea = document.getElementById('mapArea');
-  const sidebar = document.getElementById('sidebar');
-  const btn = document.getElementById('toggleBtn');
-  if(mapFullscreen){
-    mapArea.classList.add('fullscreen');
-    sidebar.classList.add('hidden');
-    btn.textContent = '📋';
-    btn.title = 'Afficher les contrôles';
-  } else {
-    mapArea.classList.remove('fullscreen');
-    sidebar.classList.remove('hidden');
-    btn.textContent = '🗺';
-    btn.title = 'Agrandir la carte';
-  }
-  setTimeout(()=>{ resize(); draw(); }, 50);
+function cityPos(name) {
+  var rc = CITIES[name];
+  return [20 + rc[0]*(canvas.width-40), 20 + (1-rc[1])*(canvas.height-40)];
 }
 
-function resize(){
-  const c=canvas.parentElement;
-  canvas.width=c.clientWidth;
-  canvas.height=c.clientHeight;
-  draw();
+function edgeW(len) {
+  return ({1:.8,2:1.2,3:1.6,4:2,6:3,8:4})[len] || 1.2;
 }
 
-function cityPos(name){
-  const[rx,ry]=CITIES[name];
-  return[20+rx*(canvas.width-40), 20+(1-ry)*(canvas.height-40)];
-}
+function draw() {
+  if (!canvas || !ctx) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#C8DDE8';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-function edgeW(len){return{1:.8,2:1.2,3:1.6,4:2,6:3,8:4}[len]||1.2;}
+  // Highlighted segments
+  var hlSegs = {};
 
-function draw(){
-  if(!canvas.width)return;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#C8DDE8'; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  // Collect highlighted segments
-  const hlSegs={}; // key -> [color,...]
-
-  // Network segments
-  if(S.network){
-    for(const k of S.network.segs){
-      if(!hlSegs[k])hlSegs[k]=[];
+  if (S.network) {
+    Object.keys(S.network.segs).forEach(function(k) {
+      if (!hlSegs[k]) hlSegs[k] = [];
       hlSegs[k].push('#FFD700');
-    }
+    });
   }
 
-  // Sequence path segments
-  if(S.sequence.length>=2&&!S.network){
-    const net=buildNetworkFromSeq(S.sequence);
-    if(net){
-      for(const k of net.segs){
-        if(!hlSegs[k])hlSegs[k]=[];
+  if (S.sequence.length >= 2 && !S.network) {
+    var net = buildNetworkFromSeq(S.sequence);
+    if (net) {
+      Object.keys(net.segs).forEach(function(k) {
+        if (!hlSegs[k]) hlSegs[k] = [];
         hlSegs[k].push('#FFD700');
-      }
+      });
     }
   }
 
-  // Ticket paths (step 1)
-  if(S.step===1||S.step===2){
-    if(S.longTicket!==null){
-      const[a,b]=ticketCities(LONG_TICKETS[S.longTicket].name);
-      const r=dijkstra(a,b);
-      if(r) for(const k of segsFromPath(r.path)){
-        if(!hlSegs[k])hlSegs[k]=[];
-        hlSegs[k].push(COLORS.long);
+  if (S.step <= 2) {
+    if (S.longTicket !== null) {
+      var lp = ticketCities(LONG_TICKETS[S.longTicket].name);
+      var lr = dijkstra(lp[0], lp[1]);
+      if (lr) {
+        Object.keys(segsFromPath(lr.path)).forEach(function(k) {
+          if (!hlSegs[k]) hlSegs[k] = [];
+          hlSegs[k].push(COLORS.long);
+        });
       }
     }
-    S.shortTickets.forEach((idx,si)=>{
-      const[a,b]=ticketCities(SHORT_TICKETS[idx].name);
-      const r=dijkstra(a,b);
-      if(r) for(const k of segsFromPath(r.path)){
-        if(!hlSegs[k])hlSegs[k]=[];
-        hlSegs[k].push(COLORS.shorts[si]||'#888');
+    S.shortTickets.forEach(function(idx, si) {
+      var sp = ticketCities(SHORT_TICKETS[idx].name);
+      var sr = dijkstra(sp[0], sp[1]);
+      if (sr) {
+        Object.keys(segsFromPath(sr.path)).forEach(function(k) {
+          if (!hlSegs[k]) hlSegs[k] = [];
+          hlSegs[k].push(COLORS.shorts[si] || '#888');
+        });
       }
     });
   }
 
   // Draw background routes
-  const drawn=new Set();
-  for(const[a,b,len,dbl]of ROUTES){
-    const k=[a,b].sort().join('|');
-    if(drawn.has(k))continue; drawn.add(k);
-    const[x1,y1]=cityPos(a),[x2,y2]=cityPos(b);
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
-    ctx.strokeStyle='#B8C8D8'; ctx.lineWidth=edgeW(len)*.6;
+  var drawn = {};
+  ROUTES.forEach(function(route) {
+    var a = route[0], b = route[1], len = route[2], dbl = route[3];
+    var k = [a,b].sort().join('|');
+    if (drawn[k]) return;
+    drawn[k] = true;
+    var p1 = cityPos(a), p2 = cityPos(b);
+    ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]);
+    ctx.strokeStyle = '#B8C8D8'; ctx.lineWidth = edgeW(len)*.6;
     ctx.setLineDash([]); ctx.stroke();
-    if(dbl){
-      const dx=x2-x1,dy=y2-y1,n=Math.sqrt(dx*dx+dy*dy);
-      const ox=-dy/n*3,oy=dx/n*3;
-      ctx.beginPath(); ctx.moveTo(x1+ox,y1+oy); ctx.lineTo(x2+ox,y2+oy);
+    if (dbl) {
+      var dx = p2[0]-p1[0], dy = p2[1]-p1[1], nm = Math.sqrt(dx*dx+dy*dy);
+      var ox = -dy/nm*3, oy = dx/nm*3;
+      ctx.beginPath(); ctx.moveTo(p1[0]+ox,p1[1]+oy); ctx.lineTo(p2[0]+ox,p2[1]+oy);
       ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
     }
-  }
-
-  // Draw highlighted routes
-  for(const[k,colors]of Object.entries(hlSegs)){
-    const[a,b]=k.split('|');
-    if(!CITIES[a]||!CITIES[b])continue;
-    const[x1,y1]=cityPos(a),[x2,y2]=cityPos(b);
-    const ro=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
-    const lw=edgeW(ro?ro[2]:2);
-    const n=colors.length;
-    const dx=x2-x1,dy=y2-y1,nm=Math.sqrt(dx*dx+dy*dy);
-    const ox=-dy/nm,oy=dx/nm;
-    colors.forEach((col,ci)=>{
-      const off=(ci-(n-1)/2)*4;
-      ctx.beginPath();
-      ctx.moveTo(x1+ox*off,y1+oy*off);
-      ctx.lineTo(x2+ox*off,y2+oy*off);
-      ctx.strokeStyle=col; ctx.lineWidth=lw*2; ctx.lineCap='round';
-      ctx.setLineDash([]); ctx.stroke();
-    });
-    // Length label
-    if(ro&&ro[2]>=3){
-      const mx=(x1+x2)/2,my=(y1+y2)/2;
-      ctx.fillStyle='rgba(0,0,0,.7)'; ctx.beginPath(); ctx.arc(mx,my,8,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='white'; ctx.font='bold 9px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(ro[2],mx,my);
-    }
-  }
-
-  // Draw cities
-  const importantCities=new Set();
-  if(S.longTicket!==null){ticketCities(LONG_TICKETS[S.longTicket].name).forEach(c=>importantCities.add(c));}
-  S.shortTickets.forEach(idx=>ticketCities(SHORT_TICKETS[idx].name).forEach(c=>importantCities.add(c)));
-  S.sequence.forEach(c=>importantCities.add(c));
-  JEWELS.forEach(j=>{importantCities.add(j.a);importantCities.add(j.b);});
-
-  for(const[name,[rx,ry]]of Object.entries(CITIES)){
-    const[x,y]=cityPos(name);
-    const imp=importantCities.has(name);
-    const inSeq=S.sequence.includes(name);
-    const size=inSeq?9:imp?6:3.5;
-    const col=inSeq?'#FF6B00':imp?'#1F4E79':'#8899AA';
-    ctx.beginPath(); ctx.arc(x,y,size,0,Math.PI*2);
-    ctx.fillStyle=col; ctx.fill();
-    ctx.strokeStyle='white'; ctx.lineWidth=inSeq?2:1; ctx.stroke();
-
-    if(imp||inSeq){
-      const offsets={'Edinburgh':[-45,0],'Londres':[-45,0],'Brest':[-42,0],'Paris':[-10,12],
-        'Madrid':[-40,0],'Lisboa':[-42,0],'Cadix':[-35,-10],'Barcelone':[12,-10],
-        'Marseille':[12,8],'Frankfurt':[12,8],'Essen':[-10,12],'Kobenhavn':[12,8],
-        'Stockholm':[12,8],'Berlin':[12,8],'Dantzig':[12,8],'Riga':[12,8],
-        'Wilno':[12,8],'Varsovie':[-10,-14],'Petrograd':[12,8],'Moscou':[12,8],
-        'Smolensk':[12,8],'Kiev':[-38,8],'Kharkov':[12,8],'Rostov':[12,8],
-        'Sochi':[12,-12],'Zürich':[-38,8],'Munich':[-38,-10],'Vienne':[12,8],
-        'Venise':[-38,8],'Zagreb':[12,-12],'Budapest':[12,8],'Sarajevo':[-48,-10],
-        'Bucarest':[12,8],'Sofia':[-35,-13],'Sébastopol':[12,8],'Constantinople':[12,-13],
-        'Ankara':[12,8],'Erzurum':[12,8],'Smyrne':[12,-12],'Athènes':[-40,-10],
-        'Brindisi':[12,8],'Rome':[-38,8],'Palerme':[-40,-12],
-        'Amsterdam':[12,8],'Bruxelles':[12,8],'Dieppe':[0,12],
-        'Pampelune':[-10,-15],
-      };
-      const[ox,oy]=offsets[name]||[12,8];
-      ctx.font=`${inSeq?'bold ':''} ${inSeq?11:9}px Inter`;
-      ctx.fillStyle=inSeq?'#FF6B00':'#1F4E79';
-      ctx.textAlign=ox<0?'right':'left'; ctx.textBaseline='middle';
-      // Shadow
-      ctx.fillStyle='rgba(255,255,255,.8)';
-      ctx.fillText(name,x+ox+1,y+oy);
-      ctx.fillStyle=inSeq?'#FF6B00':'#1F4E79';
-      ctx.fillText(name,x+ox,y+oy);
-    }
-  }
-
-  // Sequence numbers on cities
-  S.sequence.forEach((city,i)=>{
-    const[x,y]=cityPos(city);
-    ctx.fillStyle='#FF6B00'; ctx.beginPath(); ctx.arc(x,y-14,9,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='white'; ctx.font='bold 10px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(i+1,x,y-14);
   });
 
-  // Jewels indicators
-  if(S.step>=2){
-    JEWELS.forEach(j=>{
-      const[x1,y1]=cityPos(j.a),[x2,y2]=cityPos(j.b);
-      const mx=(x1+x2)/2,my=(y1+y2)/2;
-      // Only if not already in network
-      const k=[j.a,j.b].sort().join('|');
-      const used=S.network&&S.network.segs.has(k);
-      ctx.fillStyle=used?'rgba(30,107,60,.85)':'rgba(255,215,0,.85)';
-      ctx.font='bold 9px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(`⭐${j.pts}`,mx,my-12);
+  // Draw highlighted routes
+  Object.keys(hlSegs).forEach(function(k) {
+    var colors = hlSegs[k];
+    var ab = k.split('|'), a = ab[0], b = ab[1];
+    if (!CITIES[a] || !CITIES[b]) return;
+    var p1 = cityPos(a), p2 = cityPos(b);
+    var ro = ROUTES.filter(function(r){ return [r[0],r[1]].sort().join('|') === k; })[0];
+    var lw = edgeW(ro ? ro[2] : 2);
+    var n = colors.length;
+    var dx = p2[0]-p1[0], dy = p2[1]-p1[1], nm = Math.sqrt(dx*dx+dy*dy);
+    var ox = -dy/nm, oy = dx/nm;
+    colors.forEach(function(col, ci) {
+      var off = (ci - (n-1)/2) * 4;
+      ctx.beginPath();
+      ctx.moveTo(p1[0]+ox*off, p1[1]+oy*off);
+      ctx.lineTo(p2[0]+ox*off, p2[1]+oy*off);
+      ctx.strokeStyle = col; ctx.lineWidth = lw*2; ctx.lineCap = 'round';
+      ctx.setLineDash([]); ctx.stroke();
+    });
+    if (ro && ro[2] >= 3) {
+      var mx = (p1[0]+p2[0])/2, my = (p1[1]+p2[1])/2;
+      ctx.fillStyle = 'rgba(0,0,0,.7)';
+      ctx.beginPath(); ctx.arc(mx,my,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'white'; ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(ro[2], mx, my);
+    }
+  });
+
+  // Important cities
+  var importantCities = {};
+  if (S.longTicket !== null) ticketCities(LONG_TICKETS[S.longTicket].name).forEach(function(c){ importantCities[c]=true; });
+  S.shortTickets.forEach(function(idx){ ticketCities(SHORT_TICKETS[idx].name).forEach(function(c){ importantCities[c]=true; }); });
+  S.sequence.forEach(function(c){ importantCities[c]=true; });
+  JEWELS.forEach(function(j){ importantCities[j.a]=true; importantCities[j.b]=true; });
+
+  var offsets = {
+    "Edinburgh":[-45,0],"Londres":[-45,0],"Brest":[-42,0],"Paris":[-10,12],
+    "Madrid":[-40,0],"Lisboa":[-42,0],"Cadix":[-35,-10],"Barcelone":[12,-10],
+    "Marseille":[12,8],"Frankfurt":[12,8],"Essen":[-10,12],"Kobenhavn":[12,8],
+    "Stockholm":[12,8],"Berlin":[12,8],"Dantzig":[12,8],"Riga":[12,8],
+    "Wilno":[12,8],"Varsovie":[-10,-14],"Petrograd":[12,8],"Moscou":[12,8],
+    "Smolensk":[12,8],"Kiev":[-38,8],"Kharkov":[12,8],"Rostov":[12,8],
+    "Sochi":[12,-12],"Z\u00fcrich":[-38,8],"Munich":[-38,-10],"Vienne":[12,8],
+    "Venise":[-38,8],"Zagreb":[12,-12],"Budapest":[12,8],"Sarajevo":[-48,-10],
+    "Bucarest":[12,8],"Sofia":[-35,-13],"S\u00e9bastopol":[12,8],"Constantinople":[12,-13],
+    "Ankara":[12,8],"Erzurum":[12,8],"Smyrne":[12,-12],"Ath\u00e8nes":[-40,-10],
+    "Brindisi":[12,8],"Rome":[-38,8],"Palerme":[-40,-12],
+    "Amsterdam":[12,8],"Bruxelles":[12,8],"Dieppe":[0,12],"Pampelune":[-10,-15]
+  };
+
+  Object.keys(CITIES).forEach(function(name) {
+    var p = cityPos(name);
+    var imp = importantCities[name];
+    var inSeq = S.sequence.indexOf(name) >= 0;
+    var size = inSeq ? 9 : imp ? 6 : 3.5;
+    var col = inSeq ? '#FF6B00' : imp ? '#1F4E79' : '#8899AA';
+    ctx.beginPath(); ctx.arc(p[0],p[1],size,0,Math.PI*2);
+    ctx.fillStyle = col; ctx.fill();
+    ctx.strokeStyle = 'white'; ctx.lineWidth = inSeq?2:1; ctx.stroke();
+
+    if (imp || inSeq) {
+      var off = offsets[name] || [12,8];
+      ctx.font = (inSeq?'bold ':'')+((inSeq?11:9)+'px sans-serif');
+      ctx.textAlign = off[0] < 0 ? 'right' : 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(255,255,255,.8)';
+      ctx.fillText(name, p[0]+off[0]+1, p[1]+off[1]);
+      ctx.fillStyle = inSeq ? '#FF6B00' : '#1F4E79';
+      ctx.fillText(name, p[0]+off[0], p[1]+off[1]);
+    }
+  });
+
+  // Sequence numbers
+  S.sequence.forEach(function(city, i) {
+    var p = cityPos(city);
+    ctx.fillStyle = '#FF6B00';
+    ctx.beginPath(); ctx.arc(p[0],p[1]-14,9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'white'; ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(i+1, p[0], p[1]-14);
+  });
+
+  // Jewel indicators
+  if (S.step >= 2) {
+    JEWELS.forEach(function(j) {
+      var p1 = cityPos(j.a), p2 = cityPos(j.b);
+      var mx = (p1[0]+p2[0])/2, my = (p1[1]+p2[1])/2;
+      var k = [j.a,j.b].sort().join('|');
+      var used = S.network && S.network.segs[k];
+      ctx.fillStyle = used ? 'rgba(30,107,60,.85)' : 'rgba(255,215,0,.85)';
+      ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('\u2b50'+j.pts, mx, my-12);
     });
   }
 }
 
+// ── DOM HELPERS ──────────────────────────────────────────────────────────────
+function el(tag, opts) {
+  var e = document.createElement(tag);
+  if (opts) {
+    if (opts.cls) e.className = opts.cls;
+    if (opts.html) e.innerHTML = opts.html;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.onclick) e.onclick = opts.onclick;
+    if (opts.id) e.id = opts.id;
+    if (opts.disabled) e.disabled = true;
+    if (opts.title) e.title = opts.title;
+  }
+  return e;
+}
 
-window.addEventListener('DOMContentLoaded', function() {
+function append(parent) {
+  var children = Array.prototype.slice.call(arguments, 1);
+  children.forEach(function(c) { if (c) parent.appendChild(c); });
+  return parent;
+}
+
+function metricCard(label, val, sub, cls) {
+  var d = el('div', {cls: 'metric' + (cls ? ' '+cls : '')});
+  append(d,
+    el('div', {cls:'m-label', text:label}),
+    el('div', {cls:'m-val', text:String(val)}),
+    sub ? el('div', {cls:'m-sub', text:sub}) : null
+  );
+  return d;
+}
+
+function infoBox(text, cls) {
+  return el('div', {cls:'info-box'+(cls?' '+cls:''), html:text});
+}
+
+function btn(text, primary, onclick, disabled) {
+  var b = el('button', {cls:'btn'+(primary?' primary':''), onclick:onclick});
+  b.textContent = text;
+  if (disabled) b.disabled = true;
+  return b;
+}
+
+function sectionLabel(text) {
+  return el('div', {cls:'section-label', text:text});
+}
+
+function ticketCard(name, pts, color, selected, isLong, onclick) {
+  var d = el('div', {cls:'ticket-card'+(selected?' selected':'')+(isLong?' long':''), onclick:onclick});
+  d.style.setProperty('--tc', color);
+  var check = el('div', {cls:'check', text:'\u2713'});
+  var hdr = el('div', {cls:'t-header'});
+  var nm = el('div', {cls:'t-name', text:name});
+  if (isLong) {
+    var tag = el('span', {cls:'tag', text:'Long'});
+    nm.appendChild(tag);
+  }
+  var p = el('div', {cls:'t-pts', text:pts+'pts'});
+  p.style.color = color;
+  append(hdr, nm, p);
+  append(d, check, hdr);
+  return d;
+}
+
+function jewelRow(j, used) {
+  var d = el('div', {cls:'jewel-row'});
+  var dot = el('div', {cls:'jewel-dot'+(used?' used':'')});
+  var nm = el('div', {cls:'jewel-name', text:j.label});
+  var badge = el('div', {cls:'jewel-badge', text: used ? '+'+j.pts+'pts \u2713' : 'non utilis\u00e9'});
+  append(d, dot, nm, badge);
+  return d;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  var sb = document.getElementById('sidebar');
+  if (!sb) return;
+  sb.innerHTML = '';
+
+  document.getElementById('step-indicator').textContent = '\u00c9tape '+S.step+' / 4';
+  ['s1','s2','s3','s4'].forEach(function(id, i) {
+    var e = document.getElementById(id);
+    if (!e) return;
+    e.className = 'step' + (S.step===i+1?' active':S.step>i+1?' done':'');
+  });
+
+  if (S.step === 1) renderStep1(sb);
+  else if (S.step === 2) renderStep2(sb);
+  else if (S.step === 3) renderStep3(sb);
+  else renderStep4(sb);
+}
+
+function renderStep1(sb) {
+  // Mode libre
+  var freeCard = el('div');
+  append(freeCard, sectionLabel('Mode de jeu'));
+  var fc = el('div', {cls:'ticket-card'+(S.freeMode?' selected':'')});
+  fc.style.setProperty('--tc','#8B2E0A');
+  fc.onclick = toggleFreeMode;
+  var fcheck = el('div', {cls:'check', text:'\u2713'});
+  var fhdr = el('div', {cls:'t-header'});
+  var fnm = el('div', {cls:'t-name'});
+  fnm.textContent = 'Parcours libre ';
+  var ftag = el('span', {cls:'tag', text:'Libre'});
+  ftag.style.background = '#8B2E0A';
+  fnm.appendChild(ftag);
+  var fpts = el('div', {cls:'t-pts', text:'+10 bonus'});
+  fpts.style.color = '#8B2E0A';
+  var fmeta = el('div', {cls:'t-meta', text:'Maximiser pts routes sans ticket'});
+  append(fhdr, fnm, fpts);
+  append(fc, fcheck, fhdr, fmeta);
+  append(freeCard, fc);
+  sb.appendChild(freeCard);
+
+  if (!S.freeMode) {
+    // Long tickets
+    var longDiv = el('div');
+    append(longDiv, sectionLabel('Grand ticket (1 parmi 6)'));
+    LONG_TICKETS.forEach(function(t, i) {
+      append(longDiv, ticketCard(t.name, t.pts, '#E63946', S.longTicket===i, true, function(){ selectLong(i); }));
+    });
+    sb.appendChild(longDiv);
+
+    // Short tickets
+    var shortDiv = el('div');
+    append(shortDiv, sectionLabel('Tickets courts (3 max)'));
+    var sel = document.createElement('select');
+    sel.className = 'select';
+    var opt0 = document.createElement('option');
+    opt0.value = ''; opt0.textContent = '\u2014 Ajouter un ticket court \u2014';
+    sel.appendChild(opt0);
+    SHORT_TICKETS.forEach(function(t, i) {
+      if (S.shortTickets.indexOf(i) >= 0) return;
+      var opt = document.createElement('option');
+      opt.value = i; opt.textContent = t.name + ' (' + t.pts + 'pts)';
+      sel.appendChild(opt);
+    });
+    sel.onchange = function() { addShort(sel); };
+    shortDiv.appendChild(sel);
+
+    S.shortTickets.forEach(function(idx, si) {
+      append(shortDiv, ticketCard(
+        SHORT_TICKETS[idx].name, SHORT_TICKETS[idx].pts,
+        COLORS.shorts[si], true, false,
+        function(){ removeShort(si); }
+      ));
+    });
+    sb.appendChild(shortDiv);
+  }
+
+  var canProceed = S.freeMode || S.longTicket !== null || S.shortTickets.length > 0;
+  var btnRow = el('div', {cls:'btn-row'});
+  var nextBtn = btn('Suivant \u2192', true, function(){ goStep(2); }, !canProceed);
+  append(btnRow, nextBtn);
+  sb.appendChild(btnRow);
+}
+
+function renderStep2(sb) {
+  var allTermini = [];
+  if (!S.freeMode) {
+    if (S.longTicket !== null) ticketCities(LONG_TICKETS[S.longTicket].name).forEach(function(c){ if (allTermini.indexOf(c)<0) allTermini.push(c); });
+    S.shortTickets.forEach(function(idx){ ticketCities(SHORT_TICKETS[idx].name).forEach(function(c){ if (allTermini.indexOf(c)<0) allTermini.push(c); }); });
+  }
+
+  var net = S.sequence.length >= 2 ? buildNetworkFromSeq(S.sequence) : null;
+  var wagons = net ? net.wagons : 0;
+  var connected = net ? isConnected(net.segs) : false;
+
+  // Info box
+  sb.appendChild(infoBox('Clique sur les villes dans l\'ordre pour construire l\'encha\u00eenement. Recliquer sur la derni\u00e8re ville la retire.'));
+
+  // Termini
+  if (allTermini.length) {
+    var td = el('div');
+    append(td, sectionLabel('Terminus obligatoires'));
+    var tlist = el('div');
+    tlist.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px';
+    allTermini.forEach(function(c) {
+      var idx = S.sequence.indexOf(c);
+      var ti = el('div', {cls:'terminus-item'});
+      var num = el('div', {cls:'terminus-num'});
+      num.style.background = idx >= 0 ? '#1E6B3C' : '#AAA';
+      num.textContent = idx >= 0 ? String(idx+1) : '?';
+      var nm = el('div');
+      nm.textContent = c;
+      nm.style.fontSize = '11px';
+      var ok = el('span');
+      ok.textContent = idx >= 0 ? ' \u2713' : ' \u2014';
+      ok.style.color = idx >= 0 ? 'var(--green)' : 'var(--ink3)';
+      append(ti, num, nm, ok);
+      tlist.appendChild(ti);
+    });
+    append(td, tlist);
+    sb.appendChild(td);
+  }
+
+  // Jewels
+  var jd = el('div');
+  append(jd, sectionLabel('Joyaux disponibles \u2b50'));
+  JEWELS.forEach(function(j) {
+    var k = [j.a,j.b].sort().join('|');
+    var used = net && net.segs[k];
+    append(jd, jewelRow(j, used));
+  });
+  sb.appendChild(jd);
+
+  // Metrics
+  if (S.sequence.length >= 2) {
+    var md = el('div');
+    append(md, sectionLabel('R\u00e9seau en cours'));
+    var mg = el('div', {cls:'metrics'});
+    var wagClass = wagons <= 30 ? 'good' : wagons <= 44 ? 'warn' : 'bad';
+    append(mg,
+      metricCard('Wagons', wagons+'/45', null, wagClass),
+      metricCard('Connect\u00e9', connected ? '\u2713' : '\u2717', null, connected ? 'good' : 'bad'),
+      metricCard('Wagons ok', wagons<=45 ? '\u2713' : '\u2717', null, wagons<=45 ? 'good' : 'bad')
+    );
+    append(md, mg);
+    sb.appendChild(md);
+  }
+
+  var btnRow = el('div', {cls:'btn-row'});
+  var valBtn = btn('Valider le r\u00e9seau \u2192', true, function(){ goStep(3); }, !(net && wagons <= 45));
+  valBtn.id = 'btn-validate';
+  append(btnRow,
+    btn('\u2190 Retour', false, function(){ goStep(1); }),
+    btn('Effacer', false, function(){ clearSequence(); }),
+    valBtn
+  );
+  sb.appendChild(btnRow);
+}
+
+function renderStep3(sb) {
+  var net = S.network;
+  if (!net) { sb.appendChild(infoBox('Erreur r\u00e9seau')); return; }
+  var ptsR = ptsFromSegs(net.segs);
+
+  if (S.freeMode) {
+    var score = ptsR + 10;
+    var validLong = LONG_TICKETS.filter(function(t){
+      var ab = ticketCities(t.name);
+      return CITIES[ab[0]] && CITIES[ab[1]] && areConnected(ab[0],ab[1],net.segs);
+    }).sort(function(a,b){return b.pts-a.pts;});
+    var validShort = SHORT_TICKETS.filter(function(t){
+      var ab = ticketCities(t.name);
+      return CITIES[ab[0]] && CITIES[ab[1]] && areConnected(ab[0],ab[1],net.segs);
+    }).sort(function(a,b){return b.pts-a.pts;});
+    var bestLong = validLong[0] || null;
+    var best3 = validShort.slice(0,3);
+    var bonusTotal = (bestLong?bestLong.pts:0) + best3.reduce(function(s,t){return s+t.pts;},0);
+
+    append(sb, sectionLabel('R\u00e9seau libre \u2713'));
+    var mg = el('div', {cls:'metrics'});
+    append(mg,
+      metricCard('Wagons', net.wagons+'/45', (45-net.wagons)+' restants', 'good'),
+      metricCard('Pts routes', ptsR, null, 'good'),
+      metricCard('Total', score, ptsR+' routes + 10', 'good')
+    );
+    sb.appendChild(mg);
+
+    append(sb, sectionLabel('Meilleure combinaison tickets (1 long + 3 courts max)'));
+    if (bonusTotal > 0) {
+      sb.appendChild(infoBox('Bonus potentiel : +'+bonusTotal+' pts \u2192 score total '+(score+bonusTotal)+' pts', 'good'));
+      if (bestLong) sb.appendChild(ticketCard(bestLong.name, bestLong.pts, '#E63946', false, true, null));
+      best3.forEach(function(t){ sb.appendChild(ticketCard(t.name, t.pts, 'var(--green)', false, false, null)); });
+    } else {
+      sb.appendChild(infoBox('Aucun ticket valid\u00e9 par ce r\u00e9seau.', 'warn'));
+    }
+
+    append(sb, sectionLabel('Joyaux int\u00e9gr\u00e9s'));
+    JEWELS.forEach(function(j){ var k=[j.a,j.b].sort().join('|'); sb.appendChild(jewelRow(j,net.segs[k])); });
+
+    var br = el('div', {cls:'btn-row'});
+    append(br, btn('\u2190 Modifier', false, function(){ goStep(2); }), btn('Analyse \u2192', true, function(){ goStep(4); }));
+    sb.appendChild(br);
+    return;
+  }
+
+  var tickets = [];
+  if (S.longTicket !== null) tickets.push(LONG_TICKETS[S.longTicket]);
+  S.shortTickets.forEach(function(i){ tickets.push(SHORT_TICKETS[i]); });
+  var ticketResults = tickets.map(function(t){
+    var ab = ticketCities(t.name);
+    var ok = areConnected(ab[0],ab[1],net.segs);
+    return {name:t.name, pts:t.pts, ok:ok, score:ok?t.pts:-t.pts};
+  });
+  var ptsT = ticketResults.reduce(function(s,t){return s+t.score;},0);
+  var score = ptsR + ptsT + 10;
+
+  append(sb, sectionLabel('R\u00e9seau valid\u00e9 \u2713'));
+  var mg = el('div', {cls:'metrics'});
+  append(mg,
+    metricCard('Wagons', net.wagons+'/45', (45-net.wagons)+' restants', 'good'),
+    metricCard('Pts routes', ptsR, null, 'good'),
+    metricCard('Score total', score, ptsT+' tickets + '+ptsR+' routes + 10', 'good')
+  );
+  sb.appendChild(mg);
+
+  append(sb, sectionLabel('Tickets'));
+  ticketResults.forEach(function(t){
+    var d = el('div', {cls:'ticket-card'});
+    d.style.setProperty('--tc', t.ok ? 'var(--green)' : 'var(--red)');
+    var hdr = el('div', {cls:'t-header'});
+    var nm = el('div', {cls:'t-name', text:t.name});
+    var pts = el('div', {cls:'t-pts', text:(t.ok?'+':'\u2212')+t.pts+'pts'});
+    pts.style.color = t.ok ? 'var(--green)' : 'var(--red)';
+    var meta = el('div', {cls:'t-meta', text:t.ok ? '\u2713 Compl\u00e9t\u00e9' : '\u2717 Non r\u00e9alis\u00e9 \u2014 malus \u2212'+t.pts+' pts'});
+    append(hdr, nm, pts);
+    append(d, hdr, meta);
+    sb.appendChild(d);
+  });
+
+  append(sb, sectionLabel('Joyaux int\u00e9gr\u00e9s'));
+  JEWELS.forEach(function(j){ var k=[j.a,j.b].sort().join('|'); sb.appendChild(jewelRow(j,net.segs[k])); });
+
+  var br = el('div', {cls:'btn-row'});
+  append(br, btn('\u2190 Modifier', false, function(){ goStep(2); }), btn('Analyse compl\u00e8te \u2192', true, function(){ goStep(4); }));
+  sb.appendChild(br);
+}
+
+function renderStep4(sb) {
+  var net = S.network;
+  if (!net) { sb.appendChild(infoBox('Erreur')); return; }
+  var ptsR = ptsFromSegs(net.segs);
+  var wagonsLeft = 45 - net.wagons;
+
+  if (S.freeMode) {
+    var score = ptsR + 10;
+    var validLong = LONG_TICKETS.filter(function(t){
+      var ab=ticketCities(t.name); return CITIES[ab[0]]&&CITIES[ab[1]]&&areConnected(ab[0],ab[1],net.segs);
+    }).sort(function(a,b){return b.pts-a.pts;});
+    var validShort = SHORT_TICKETS.filter(function(t){
+      var ab=ticketCities(t.name); return CITIES[ab[0]]&&CITIES[ab[1]]&&areConnected(ab[0],ab[1],net.segs);
+    }).sort(function(a,b){return b.pts-a.pts;});
+    var bestLong = validLong[0]||null;
+    var best3 = validShort.slice(0,3);
+    var bonusTotal = (bestLong?bestLong.pts:0)+best3.reduce(function(s,t){return s+t.pts;},0);
+
+    append(sb, sectionLabel('Score libre'));
+    var mg = el('div', {cls:'metrics'});
+    append(mg,
+      metricCard('Wagons', net.wagons+'/45', null, 'good'),
+      metricCard('Pts routes', ptsR, null, 'good'),
+      metricCard('Total', score, '+10 bonus', 'good')
+    );
+    sb.appendChild(mg);
+
+    append(sb, sectionLabel('Tickets valid\u00e9s (1 long + 3 courts max)'));
+    if (bonusTotal > 0) {
+      sb.appendChild(infoBox('Si tu avais tir\u00e9 ces tickets : +'+bonusTotal+' pts \u2192 score total '+(score+bonusTotal)+' pts', 'good'));
+      if (bestLong) sb.appendChild(ticketCard(bestLong.name, bestLong.pts, '#E63946', false, true, null));
+      best3.forEach(function(t){ sb.appendChild(ticketCard(t.name, t.pts, 'var(--green)', false, false, null)); });
+    } else {
+      sb.appendChild(infoBox('Aucun ticket valid\u00e9 par ce r\u00e9seau.', 'warn'));
+    }
+
+    var br = el('div', {cls:'btn-row'});
+    append(br, btn('\u2190 Modifier', false, function(){ goStep(2); }), btn('\u21ba Nouveau', false, function(){ resetAll(); }));
+    br.lastChild.className = 'btn danger';
+    sb.appendChild(br);
+    return;
+  }
+
+  var tickets = [];
+  if (S.longTicket !== null) tickets.push(LONG_TICKETS[S.longTicket]);
+  S.shortTickets.forEach(function(i){ tickets.push(SHORT_TICKETS[i]); });
+  var ticketResults = tickets.map(function(t){
+    var ab=ticketCities(t.name); var ok=areConnected(ab[0],ab[1],net.segs);
+    return {name:t.name,pts:t.pts,ok:ok,score:ok?t.pts:-t.pts};
+  });
+  var ptsT = ticketResults.reduce(function(s,t){return s+t.score;},0);
+  var score = ptsR + ptsT + 10;
+
+  append(sb, sectionLabel('Score final'));
+  var mg = el('div', {cls:'metrics'});
+  append(mg,
+    metricCard('Tickets', ptsT, null, 'good'),
+    metricCard('Routes', ptsR, null, 'good'),
+    metricCard('Total', score, '+10 bonus', 'good')
+  );
+  sb.appendChild(mg);
+
+  // Wagons restants + joyaux accessibles
+  if (wagonsLeft > 0) {
+    var accessibleJewels = JEWELS.filter(function(j){
+      var k=[j.a,j.b].sort().join('|'); return !net.segs[k] && j.w <= wagonsLeft;
+    });
+    if (accessibleJewels.length > 0) {
+      var jd = el('div');
+      append(jd, sectionLabel('Joyaux accessibles (' + wagonsLeft + ' wagons restants)'));
+      accessibleJewels.forEach(function(j) {
+        var row = el('div', {cls:'jewel-row'});
+        var dot = el('div', {cls:'jewel-dot'});
+        var nm = el('div', {cls:'jewel-name', text:j.label+' ('+j.w+'w \u2192 +'+j.pts+'pts)'});
+        var addBtn = btn('Ajouter', true, function(){ addJewel(j.a, j.b); });
+        addBtn.style.cssText = 'padding:3px 8px;height:auto;font-size:11px';
+        append(row, dot, nm, addBtn);
+        jd.appendChild(row);
+      });
+      sb.appendChild(jd);
+    }
+  }
+
+  // Goulots
+  var singleSegs = Object.keys(net.segs).filter(function(k){
+    var r = ROUTES.filter(function(r){ return [r[0],r[1]].sort().join('|')===k; })[0];
+    return r && !r[3] && r[2] >= 4;
+  });
+  if (singleSegs.length) {
+    append(sb, sectionLabel('Goulots \u00e0 surveiller'));
+    var sl = el('div', {cls:'seg-list'});
+    singleSegs.forEach(function(k){
+      var ab=k.split('|'); sl.appendChild(el('span',{text:ab[0]+' \u2014 '+ab[1]}));
+    });
+    sb.appendChild(sl);
+    sb.appendChild(infoBox('Liaisons simples critiques \u2014 construire en priorit\u00e9 !', 'warn'));
+  }
+
+  var br = el('div', {cls:'btn-row'});
+  var backBtn = btn('\u2190 Modifier', false, function(){ goStep(2); });
+  var newBtn = btn('\u21ba Nouveau tirage', false, function(){ resetAll(); });
+  newBtn.className = 'btn danger';
+  append(br, backBtn, newBtn);
+  sb.appendChild(br);
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────────
+function selectLong(i) { S.longTicket = S.longTicket===i ? null : i; render(); draw(); }
+function addShort(sel) {
+  if (!sel.value || S.shortTickets.length >= 3) return;
+  S.shortTickets.push(parseInt(sel.value));
+  sel.value = '';
+  render(); draw();
+}
+function removeShort(si) { S.shortTickets.splice(si,1); render(); draw(); }
+function clearSequence() { S.sequence.length = 0; render(); draw(); }
+function toggleFreeMode() {
+  S.freeMode = !S.freeMode;
+  if (S.freeMode) { S.longTicket=null; S.shortTickets=[]; }
+  render(); draw();
+}
+function resetAll() {
+  S.step=1; S.freeMode=false; S.longTicket=null; S.shortTickets=[];
+  S.sequence=[]; S.network=null;
+  render(); draw();
+}
+
+function goStep(n) {
+  if (n===3) {
+    var net = buildNetworkFromSeq(S.sequence);
+    if (!net) { alert('R\u00e9seau invalide \u2014 trop de wagons ou chemin impossible'); return; }
+    S.network = net;
+  }
+  S.step = n; render(); draw();
+}
+
+function addJewel(a, b) {
+  var net = S.network; if (!net) return;
+  var r = dijkstra(a,b); if (!r) return;
+  var wagons = net.wagons;
+  Object.keys(segsFromPath(r.path)).forEach(function(seg){
+    if (!net.segs[seg]) {
+      net.segs[seg] = true;
+      var ro = ROUTES.filter(function(ro){ return [ro[0],ro[1]].sort().join('|')===seg; })[0];
+      wagons += ro ? ro[2] : 0;
+    }
+  });
+  if (wagons > 45) { alert('Pas assez de wagons !'); return; }
+  net.wagons = wagons;
+  render(); draw();
+}
+
+function handleMapClick(e) {
+  if (S.step !== 2) return;
+  var rect = canvas.getBoundingClientRect();
+  var scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+  var cx = (e.clientX-rect.left)*scaleX, cy = (e.clientY-rect.top)*scaleY;
+  var best = null, bestD = 20*Math.max(scaleX,scaleY);
+  Object.keys(CITIES).forEach(function(name){
+    var p = cityPos(name);
+    var d = Math.sqrt((p[0]-cx)*(p[0]-cx)+(p[1]-cy)*(p[1]-cy));
+    if (d < bestD) { bestD=d; best=name; }
+  });
+  if (!best) return;
+  if (S.sequence.length > 0 && S.sequence[S.sequence.length-1] === best) {
+    S.sequence.pop();
+  } else if (S.sequence.indexOf(best) < 0) {
+    S.sequence.push(best);
+  }
+  render(); draw();
+}
+
+// ── TOGGLE MAP ──────────────────────────────────────────────────────────────
+var mapFullscreen = false;
+function toggleView() {
+  mapFullscreen = !mapFullscreen;
+  var mapArea = document.getElementById('mapArea');
+  var sidebar = document.getElementById('sidebar');
+  var tbtn = document.getElementById('toggleBtn');
+  if (mapFullscreen) {
+    mapArea.classList.add('fullscreen');
+    sidebar.classList.add('hidden');
+    tbtn.textContent = '\ud83d\udccb';
+  } else {
+    mapArea.classList.remove('fullscreen');
+    sidebar.classList.remove('hidden');
+    tbtn.textContent = '\ud83d\uddfa';
+  }
+  setTimeout(function(){ resize(); draw(); }, 50);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function resize() {
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  draw();
+}
+
+function initApp() {
   canvas = document.getElementById('map');
   ctx = canvas.getContext('2d');
   canvas.addEventListener('click', handleMapClick);
   window.addEventListener('resize', resize);
   resize();
-  render();
-});
-
-function handleMapClick(e){
-  if(S.step!==2)return;
-  const rect=canvas.getBoundingClientRect();
-  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
-  const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
-  const cx=mx*scaleX, cy=my*scaleY;
-
-  let best=null,bestD=20*Math.max(scaleX,scaleY);
-  for(const[name]of Object.entries(CITIES)){
-    const[px,py]=cityPos(name);
-    const d=Math.sqrt((px-cx)**2+(py-cy)**2);
-    if(d<bestD){bestD=d;best=name;}
-  }
-  if(!best)return;
-
-  if(S.sequence.length>0&&S.sequence[S.sequence.length-1]===best){
-    S.sequence.pop();
-  } else if(!S.sequence.includes(best)){
-    S.sequence.push(best);
-  }
-  render(); draw();
-});
-
-// ── RENDER SIDEBAR ────────────────────────────────────────────────────────────
-function render(){
-  const sb=document.getElementById('sidebar');
-  document.getElementById('step-indicator').textContent=`Étape ${S.step} / 4`;
-  ['s1','s2','s3','s4'].forEach((id,i)=>{
-    const el=document.getElementById(id);
-    el.className='step'+(S.step===i+1?' active':S.step>i+1?' done':'');
-  });
-
-  if(S.step===1) renderStep1(sb);
-  else if(S.step===2) renderStep2(sb);
-  else if(S.step===3) renderStep3(sb);
-  else renderStep4(sb);
-}
-
-function renderStep1(sb){
-  const longIdx=S.longTicket;
-  sb.innerHTML=`
-    <div>
-      <div class="section-label">Mode de jeu</div>
-      <div class="ticket-card ${S.freeMode?'selected':''}" style="--tc:#8B2E0A" onclick="toggleFreeMode()">
-        <div class="check">✓</div>
-        <div class="t-header">
-          <div class="t-name">Parcours libre <span class="tag" style="background:#8B2E0A">Libre</span></div>
-          <div class="t-pts" style="color:#8B2E0A">+10 bonus</div>
-        </div>
-        <div class="t-meta">Maximiser les pts routes sans ticket — réseau connecté en 45 wagons</div>
-      </div>
-    </div>
-
-    ${!S.freeMode?`
-    <div>
-      <div class="section-label">Grand ticket (1 parmi 6)</div>
-      ${LONG_TICKETS.map((t,i)=>`
-        <div class="ticket-card long ${longIdx===i?'selected':''}" style="--tc:#E63946" onclick="selectLong(${i})">
-          <div class="check">✓</div>
-          <div class="t-header"><div class="t-name">${t.name}<span class="tag">Long</span></div><div class="t-pts">${t.pts}pts</div></div>
-        </div>`).join('')}
-    </div>
-    <div>
-      <div class="section-label">Tickets courts (3 max)</div>
-      <select onchange="addShort(this)">
-        <option value="">— Ajouter un ticket court —</option>
-        ${SHORT_TICKETS.map((t,i)=>S.shortTickets.includes(i)?'':
-          `<option value="${i}">${t.name} (${t.pts}pts)</option>`).join('')}
-      </select>
-      ${S.shortTickets.map((idx,si)=>`
-        <div class="ticket-card selected" style="--tc:${COLORS.shorts[si]}" onclick="removeShort(${si})">
-          <div class="check">✓</div>
-          <div class="t-header">
-            <div class="t-name">${SHORT_TICKETS[idx].name}</div>
-            <div class="t-pts" style="color:${COLORS.shorts[si]}">${SHORT_TICKETS[idx].pts}pts</div>
-          </div>
-          <div class="t-meta">Cliquer pour retirer</div>
-        </div>`).join('')}
-    </div>`:''}
-
-    <div class="btn-row">
-      <button class="btn primary" onclick="goStep(2)"
-        ${S.freeMode||longIdx!==null||S.shortTickets.length>0?'':'disabled'}>
-        Suivant → Construire le réseau
-      </button>
-    </div>`;
-
-  // Re-bind clicks on short tickets
-  sb.querySelectorAll('.ticket-card.selected').forEach((el,i)=>{
-    el.onclick=()=>{S.shortTickets.splice(i,1);render();draw();};
-  });
-}
-
-function renderStep2(sb){
-  const allTermini=S.freeMode?[]:([...new Set([
-    ...(S.longTicket!==null?ticketCities(LONG_TICKETS[S.longTicket].name):[]),
-    ...S.shortTickets.flatMap(idx=>ticketCities(SHORT_TICKETS[idx].name))
-  ])]);
-
-  const net=S.sequence.length>=2?buildNetworkFromSeq(S.sequence):null;
-  const wagons=net?net.wagons:0;
-  const connected=net?isConnected(net.segs):false;
-  // Check each ticket: all terminus must appear in network cities
-  const netCities=net?new Set([...net.segs].flatMap(k=>k.split('|'))):new Set();
-  const allTickets=[
-    ...(S.longTicket!==null?[LONG_TICKETS[S.longTicket]]:[]),
-    ...S.shortTickets.map(i=>SHORT_TICKETS[i])
-  ];
-  const ticketsOk=net?allTickets.every(t=>{
-    const[a,b]=ticketCities(t.name);
-    // First check cities are in network, then connectivity
-    if(!netCities.has(a)||!netCities.has(b)) return false;
-    return areConnected(a,b,net.segs);
-  }):false;
-
-  sb.innerHTML=`
-    <div class="info-box">
-      <strong>Clique sur les villes</strong> dans l'ordre souhaité pour construire ton enchaînement.<br>
-      Toutes les villes terminus doivent apparaître. Tu peux ajouter des villes intermédiaires.<br>
-      <em>Cliquer à nouveau sur la dernière ville la retire.</em>
-    </div>
-
-    <div>
-      <div class="section-label">Terminus obligatoires</div>
-      ${allTermini.map(c=>`
-        <div class="terminus-item">
-          <div class="terminus-num" style="background:${S.sequence.includes(c)?'#1E6B3C':'#AAA'}">${S.sequence.indexOf(c)>=0?S.sequence.indexOf(c)+1:'?'}</div>
-          <div class="terminus-name">${c}</div>
-          ${S.sequence.includes(c)?'<span style="color:var(--green);font-size:12px">✓</span>':'<span style="color:var(--ink3);font-size:11px">à placer</span>'}
-        </div>`).join('')}
-    </div>
-
-    <div>
-      <div class="section-label">Joyaux disponibles ⭐</div>
-      ${JEWELS.map(j=>{
-        const k=[j.a,j.b].sort().join('|');
-        const used=net&&net.segs.has(k);
-        return`<div class="jewel-row">
-          <div class="jewel-dot ${used?'used':''}"></div>
-          <div class="jewel-name">${j.label}</div>
-          <div class="jewel-badge">${j.w}w · ${j.pts}pts ${used?'✓':''}</div>
-        </div>`;}).join('')}
-    </div>
-
-    ${S.sequence.length>=2?`
-    <div>
-      <div class="section-label">Réseau en cours</div>
-      <div class="metrics">
-        <div class="metric ${wagons<=30?'good':wagons<=44?'warn':'bad'}">
-          <div class="m-label">Wagons</div>
-          <div class="m-val">${wagons}/45</div>
-        </div>
-        <div class="metric ${connected?'good':'bad'}">
-          <div class="m-label">Connecté</div>
-          <div class="m-val">${connected?'✓':'✗'}</div>
-        </div>
-        <div class="metric ${ticketsOk?'good':'warn'}">
-          <div class="m-label">Tickets</div>
-          <div class="m-val">${ticketsOk?'✓':'…'}</div>
-        </div>
-      </div>
-    </div>`:''}
-
-    <div class="btn-row">
-      <button class="btn" onclick="goStep(1)">← Retour</button>
-      <button class="btn" onclick="clearSequence()">Effacer</button>
-      <button class="btn primary" id="btn-validate" onclick="goStep(3)">
-        Valider le réseau →
-      </button>
-    </div>`;
-
-  // Enable/disable validate button after render
-  // Enable button if sequence has >= 2 cities and wagons ok
-  setTimeout(()=>{
-    const btn = document.getElementById('btn-validate');
-    if(btn) btn.disabled = !(net && wagons <= 45 && wagons > 0);
-  }, 50);
-}
-
-function renderStep3(sb){
-  const net=S.network;
-  if(!net){sb.innerHTML='<div>Erreur réseau</div>';return;}
-  const ptsR=ptsFromSegs(net.segs);
-
-  if(S.freeMode){
-    const score=ptsR+10;
-    const validLong=LONG_TICKETS.filter(t=>{
-      const[a,b]=ticketCities(t.name);
-      if(!CITIES[a]||!CITIES[b])return false;
-      return areConnected(a,b,net.segs);
-    }).sort((a,b)=>b.pts-a.pts);
-    const validShort=SHORT_TICKETS.filter(t=>{
-      const[a,b]=ticketCities(t.name);
-      if(!CITIES[a]||!CITIES[b])return false;
-      return areConnected(a,b,net.segs);
-    }).sort((a,b)=>b.pts-a.pts);
-    const bestLong=validLong[0]||null;
-    const best3Short=validShort.slice(0,3);
-    const bonusTotal=(bestLong?bestLong.pts:0)+best3Short.reduce((s,t)=>s+t.pts,0);
-
-    sb.innerHTML=`
-      <div>
-        <div class="section-label">Réseau libre ✓</div>
-        <div class="metrics">
-          <div class="metric good"><div class="m-label">Wagons</div><div class="m-val">${net.wagons}/45</div><div class="m-sub">${45-net.wagons} restants</div></div>
-          <div class="metric good"><div class="m-label">Pts routes</div><div class="m-val">${ptsR}</div></div>
-          <div class="metric good"><div class="m-label">Total</div><div class="m-val">${score}</div><div class="m-sub">${ptsR} routes + 10 bonus</div></div>
-        </div>
-      </div>
-      <div>
-        <div class="section-label">Meilleure combinaison tickets (1 long + 3 courts max)</div>
-        ${bonusTotal>0?`
-          <div class="info-box good" style="margin-bottom:6px">
-            Bonus potentiel : <strong>+${bonusTotal} pts</strong> → score total <strong>${score+bonusTotal} pts</strong>
-          </div>
-          ${bestLong?`<div class="ticket-card" style="--tc:#E63946">
-            <div class="t-header">
-              <div class="t-name">${bestLong.name}<span class="tag">Long</span></div>
-              <div class="t-pts" style="color:#E63946">+${bestLong.pts}pts</div>
-            </div>
-          </div>`:''}
-          ${best3Short.map(t=>`
-            <div class="ticket-card" style="--tc:var(--green)">
-              <div class="t-header">
-                <div class="t-name">${t.name}</div>
-                <div class="t-pts" style="color:var(--green)">+${t.pts}pts</div>
-              </div>
-            </div>`).join('')}
-          ${validLong.length>1||validShort.length>3?`<div style="font-size:11px;color:var(--ink3);margin-top:4px">${validLong.length} grand(s) et ${validShort.length} court(s) validés — affichage limité à la combinaison optimale.</div>`:''}`
-        :`<div class="info-box warn">Aucun ticket validé par ce réseau.</div>`}
-      </div>
-      <div>
-        <div class="section-label">Joyaux intégrés</div>
-        ${JEWELS.map(j=>{
-          const k=[j.a,j.b].sort().join('|');
-          const used=net.segs.has(k);
-          return`<div class="jewel-row">
-            <div class="jewel-dot ${used?'used':''}"></div>
-            <div class="jewel-name">${j.label}</div>
-            <div class="jewel-badge">${used?`+${j.pts}pts ✓`:'non utilisé'}</div>
-          </div>`;}).join('')}
-      </div>
-      <div class="btn-row">
-        <button class="btn" onclick="goStep(2)">← Modifier</button>
-        <button class="btn primary" onclick="goStep(4)">Analyse →</button>
-      </div>`;
-    return;
-  }
-  const tickets=[
-    ...(S.longTicket!==null?[LONG_TICKETS[S.longTicket]]:[] ),
-    ...S.shortTickets.map(i=>SHORT_TICKETS[i])
-  ];
-  const ticketResults=tickets.map(t=>{
-    const[a,b]=ticketCities(t.name);
-    const ok=areConnected(a,b,net.segs);
-    return{...t,ok,score:ok?t.pts:-t.pts};
-  });
-  const ptsT=ticketResults.reduce((s,t)=>s+t.score,0);
-  const score=ptsR+ptsT+10;
-
-  sb.innerHTML=`
-    <div>
-      <div class="section-label">Réseau validé ✓</div>
-      <div class="metrics">
-        <div class="metric good"><div class="m-label">Wagons</div><div class="m-val">${net.wagons}/45</div><div class="m-sub">${45-net.wagons} restants</div></div>
-        <div class="metric good"><div class="m-label">Pts routes</div><div class="m-val">${ptsR}</div></div>
-        <div class="metric good"><div class="m-label">Score total</div><div class="m-val">${score}</div><div class="m-sub">${ptsT} tickets + ${ptsR} routes + 10</div></div>
-      </div>
-    </div>
-
-    <div>
-      <div class="section-label">Tickets</div>
-      ${ticketResults.map(t=>`
-        <div class="ticket-card" style="--tc:${t.ok?'var(--green)':'var(--red)'}">
-          <div class="t-header">
-            <div class="t-name">${t.name}</div>
-            <div class="t-pts" style="color:${t.ok?'var(--green)':'var(--red)'}">${t.ok?'+':'−'}${t.pts}pts</div>
-          </div>
-          <div class="t-meta">${t.ok?'✓ Complété':'✗ Non réalisé — malus −'+t.pts+' pts'}</div>
-        </div>`).join('')}
-    </div>
-
-    <div>
-      <div class="section-label">Joyaux intégrés</div>
-      ${JEWELS.map(j=>{
-        const k=[j.a,j.b].sort().join('|');
-        const used=net.segs.has(k);
-        return`<div class="jewel-row">
-          <div class="jewel-dot ${used?'used':''}"></div>
-          <div class="jewel-name">${j.label}</div>
-          <div class="jewel-badge">${used?`+${j.pts}pts ✓`:'non utilisé'}</div>
-        </div>`;}).join('')}
-    </div>
-
-    <div class="btn-row">
-      <button class="btn" onclick="goStep(2)">← Modifier</button>
-      <button class="btn primary" onclick="goStep(4)">Analyse complète →</button>
-    </div>`;
-}
-
-function renderStep4(sb){
-  const net=S.network;
-  if(!net){sb.innerHTML='<div>Erreur</div>';return;}
-  const ptsR=ptsFromSegs(net.segs);
-  const wagonsLeft=45-net.wagons;
-
-  if(S.freeMode){
-    const score=ptsR+10;
-    // Tickets validés par le réseau
-    const validLong=LONG_TICKETS.filter(t=>{
-      const[a,b]=ticketCities(t.name);
-      if(!CITIES[a]||!CITIES[b])return false;
-      return areConnected(a,b,net.segs);
-    }).sort((a,b)=>b.pts-a.pts);
-    const validShort=SHORT_TICKETS.filter(t=>{
-      const[a,b]=ticketCities(t.name);
-      if(!CITIES[a]||!CITIES[b])return false;
-      return areConnected(a,b,net.segs);
-    }).sort((a,b)=>b.pts-a.pts);
-
-    // Meilleure combinaison : 1 long + 3 courts max
-    const bestLong=validLong[0]||null;
-    const best3Short=validShort.slice(0,3);
-    const bonusTotal=(bestLong?bestLong.pts:0)+best3Short.reduce((s,t)=>s+t.pts,0);
-
-    sb.innerHTML=`
-      <div>
-        <div class="section-label">Score libre</div>
-        <div class="metrics">
-          <div class="metric good"><div class="m-label">Wagons</div><div class="m-val">${net.wagons}/45</div></div>
-          <div class="metric good"><div class="m-label">Pts routes</div><div class="m-val">${ptsR}</div></div>
-          <div class="metric good"><div class="m-label">Total</div><div class="m-val">${score}</div><div class="m-sub">+10 bonus</div></div>
-        </div>
-      </div>
-      <div>
-        <div class="section-label">Meilleure combinaison de tickets (1 long + 3 courts max)</div>
-        ${bonusTotal>0?`
-          <div class="info-box good" style="margin-bottom:6px">
-            Si tu avais tiré ces tickets : <strong>+${bonusTotal} pts</strong> supplémentaires → score total <strong>${score+bonusTotal} pts</strong>
-          </div>
-          ${bestLong?`<div class="ticket-card" style="--tc:#E63946">
-            <div class="t-header">
-              <div class="t-name">${bestLong.name}<span class="tag">Long</span></div>
-              <div class="t-pts" style="color:#E63946">+${bestLong.pts}pts</div>
-            </div>
-          </div>`:''}
-          ${best3Short.map(t=>`
-            <div class="ticket-card" style="--tc:var(--green)">
-              <div class="t-header">
-                <div class="t-name">${t.name}</div>
-                <div class="t-pts" style="color:var(--green)">+${t.pts}pts</div>
-              </div>
-            </div>`).join('')}
-          ${validLong.length>1||validShort.length>3?`
-            <div class="t-meta" style="margin-top:4px;color:var(--ink3)">
-              ${validLong.length} grand(s) ticket(s) et ${validShort.length} ticket(s) court(s) validés au total — affichage limité à la combinaison optimale.
-            </div>`:''}
-        `:`<div class="info-box warn">Aucun ticket validé par ce réseau.</div>`}
-      </div>
-      ${wagonsLeft>0?`<div class="info-box" style="margin-top:8px">Tu as encore <strong>${wagonsLeft} wagons</strong> disponibles.</div>`:''}
-      <div class="btn-row" style="margin-top:10px">
-        <button class="btn" onclick="goStep(2)">← Modifier</button>
-        <button class="btn danger" onclick="resetAll()">↺ Nouveau</button>
-      </div>`;
-    return;
-  }
-
-  const tickets=[
-    ...(S.longTicket!==null?[LONG_TICKETS[S.longTicket]]:[] ),
-    ...S.shortTickets.map(i=>SHORT_TICKETS[i])
-  ];
-  const ticketResults=tickets.map(t=>{
-    const[a,b]=ticketCities(t.name);
-    const ok=areConnected(a,b,net.segs);
-    return{...t,ok,score:ok?t.pts:-t.pts};
-  });
-  const ptsT=ticketResults.reduce((s,t)=>s+t.score,0);
-  const score=ptsR+ptsT+10;
-
-  // Joyaux non encore intégrés
-  const missingJewels=JEWELS.filter(j=>{
-    const k=[j.a,j.b].sort().join('|');
-    return !net.segs.has(k);
-  });
-
-  // Liaisons adjacentes rentables dans le budget restant
-  const adj=[];
-  for(const[a,b,len]of ROUTES){
-    const k=[a,b].sort().join('|');
-    if(net.segs.has(k))continue;
-    if(len>wagonsLeft)continue;
-    // Must be adjacent to network
-    const netCities=new Set([...net.segs].flatMap(k=>k.split('|')));
-    if(!netCities.has(a)&&!netCities.has(b))continue;
-    adj.push({a,b,len,pts:ptsByLen(len),ratio:(ptsByLen(len)/len).toFixed(1)});
-  }
-  adj.sort((x,y)=>y.pts-x.pts);
-
-  // Goulots
-  const singleSegs=[...net.segs].filter(k=>{
-    const r=ROUTES.find(r=>[r[0],r[1]].sort().join('|')===k);
-    return r&&!r[3]&&r[2]>=4;
-  });
-
-  sb.innerHTML=`
-    <div>
-      <div class="section-label">Score final</div>
-      <div class="metrics">
-        <div class="metric good"><div class="m-label">Tickets</div><div class="m-val">${ptsT}</div></div>
-        <div class="metric good"><div class="m-label">Routes</div><div class="m-val">${ptsR}</div></div>
-        <div class="metric good"><div class="m-label">Total</div><div class="m-val">${score}</div><div class="m-sub">+10 bonus</div></div>
-      </div>
-    </div>
-
-    <div>
-      <div class="section-label">Wagons restants : ${wagonsLeft}</div>
-      ${wagonsLeft>0?`
-        ${missingJewels.filter(j=>j.w<=wagonsLeft).length>0?`
-        <div class="info-box good" style="margin-bottom:6px">
-          <strong>Joyaux accessibles :</strong><br>
-          ${missingJewels.filter(j=>j.w<=wagonsLeft).map(j=>
-            `<span style="cursor:pointer;text-decoration:underline;color:var(--green)"
-              onclick="addJewel('${j.a}','${j.b}')">⭐ ${j.label} (${j.w}w → +${j.pts}pts)</span>`
-          ).join('<br>')}
-        </div>`:''}
-        <div class="info-box" style="margin-bottom:6px">
-          <strong>Meilleures liaisons adjacentes :</strong><br>
-          ${adj.slice(0,5).map(r=>
-            `<span style="cursor:pointer;text-decoration:underline;color:var(--blue)"
-              onclick="addRoute('${r.a}','${r.b}')">
-              ${r.a}—${r.b} (${r.len}w → +${r.pts}pts)
-            </span>`
-          ).join('<br>')}
-        </div>`
-      :`<div class="info-box good">Budget parfaitement utilisé !</div>`}
-    </div>
-
-    ${singleSegs.length?`
-    <div>
-      <div class="section-label">Goulots à surveiller</div>
-      <div class="seg-list">${singleSegs.map(k=>{
-        const[a,b]=k.split('|');
-        return`<span>${a} — ${b}</span>`;
-      }).join(' ')}</div>
-      <div class="info-box warn" style="margin-top:6px">Liaisons simples critiques — construire en priorité !</div>
-    </div>`:''}
-
-    <div class="btn-row">
-      <button class="btn" onclick="goStep(2)">← Modifier</button>
-      <button class="btn danger" onclick="resetAll()">↺ Nouveau tirage</button>
-    </div>`;
-}
-
-// ── ACTIONS ───────────────────────────────────────────────────────────────────
-function selectLong(i){S.longTicket=S.longTicket===i?null:i;render();draw();}
-function addShort(sel){
-  if(sel.value===''||S.shortTickets.length>=3)return;
-  S.shortTickets.push(parseInt(sel.value));
-  sel.value='';
-  render();draw();
-}
-function removeShort(si){S.shortTickets.splice(si,1);render();draw();}
-
-function goStep(n){
-  if(n===3){
-    const net=buildNetworkFromSeq(S.sequence);
-    if(!net){alert('Réseau invalide — trop de wagons ou chemin impossible');return;}
-    S.network=net;
-  }
-  S.step=n;
-  render();draw();
-}
-
-function addJewel(a,b){
-  const net=S.network;
-  if(!net)return;
-  // Build path a→b and add to network
-  const r=dijkstra(a,b);
-  if(!r)return;
-  let wagons=net.wagons;
-  for(const seg of segsFromPath(r.path)){
-    if(!net.segs.has(seg)){
-      net.segs.add(seg);
-      const ro=ROUTES.find(ro=>[ro[0],ro[1]].sort().join('|')===seg);
-      wagons+=ro?ro[2]:0;
-    }
-  }
-  if(wagons>45){alert('Pas assez de wagons !');return;}
-  net.wagons=wagons;
-  render();draw();
-}
-
-function addRoute(a,b){
-  addJewel(a,b); // same logic
-}
-
-function clearSequence(){S.sequence.length=0;render();draw();}
-
-function toggleFreeMode(){
-  S.freeMode=!S.freeMode;
-  if(S.freeMode){S.longTicket=null;S.shortTickets=[];}
-  render();draw();
-}
-
-function resetAll(){
-  S.step=1;S.freeMode=false;S.longTicket=null;S.shortTickets=[];S.sequence=[];S.network=null;
-  render();draw();
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-var canvas, ctx;
-
-function initApp() {
-  canvas = document.getElementById('map');
-  ctx = canvas.getContext('2d');
-  
-  canvas.addEventListener('click', handleMapClick);
-  
-  window.addEventListener('resize', function() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-    draw();
-  });
-  
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
-  
-  draw();
   render();
 }
 
