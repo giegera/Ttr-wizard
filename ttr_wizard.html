@@ -4,117 +4,86 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Aventuriers du Rail — Wizard stratégique</title>
+<title>Rail Europe Wizard</title>
 <style>
-:root {
-  --bg: #F5F0E8; --card: #FDFAF4; --border: #D4C9B0;
-  --ink: #2C2416; --ink2: #5C5040; --ink3: #8C7D6A;
-  --accent: #8B2E0A; --green: #1E6B3C; --green-bg: #EAF5EE;
-  --red: #8B0000; --red-bg: #FDEAEA; --yellow-bg: #FFF8E7;
-  --blue: #1F4E79; --blue-bg: #EBF3FB; --sea: #C8DDE8;
-  --radius: 6px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
-body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); font-size: 13px; display: flex; flex-direction: column; }
-
-header { background: var(--ink); color: #F5F0E8; padding: 8px 14px; padding-top: max(8px, env(safe-area-inset-top)); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
-header h1 { font-size: 14px; font-weight: 600; }
-
-.steps { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.step { flex: 1; padding: 6px 4px; text-align: center; font-size: 10px; font-weight: 500; color: var(--ink3); border-bottom: 3px solid transparent; }
-.step.active { color: var(--blue); border-bottom-color: var(--blue); }
-.step.done { color: var(--green); }
-.step-num { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--border); color: var(--ink); font-size: 9px; font-weight: 700; margin-right: 3px; vertical-align: middle; }
-.step.active .step-num { background: var(--blue); color: white; }
-.step.done .step-num { background: var(--green); color: white; }
-
-/* PORTRAIT : contrôles en haut, carte en bas */
-.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
-.controls { background: var(--card); border-bottom: 1px solid var(--border); overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; max-height: 45vh; flex-shrink: 0; }
-.map-area { flex: 1; position: relative; background: var(--sea); min-height: 0; }
-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-
-/* PAYSAGE : contrôles à gauche, carte à droite */
-@media (orientation: landscape) {
-  .main { flex-direction: row; }
-  .controls { border-bottom: none; border-right: 1px solid var(--border); max-height: none; width: 260px; flex-shrink: 0; }
-  .map-area { flex: 1; }
-  header h1 { font-size: 13px; }
-}
-
-.section-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
-
-.ticket-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; background: var(--bg); margin-bottom: 4px; position: relative; min-height: 40px; }
-.ticket-card.selected { border-color: var(--tc, var(--blue)); box-shadow: 0 0 0 1px var(--tc, var(--blue)); background: var(--card); }
-.ticket-card.long { border-left: 4px solid var(--accent); }
-.t-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
-.t-name { font-size: 12px; font-weight: 600; line-height: 1.3; }
-.t-pts { font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-.t-meta { font-size: 10px; color: var(--ink3); margin-top: 2px; }
-.check { position: absolute; top: 7px; right: 7px; width: 16px; height: 16px; border-radius: 50%; background: var(--tc, var(--blue)); color: white; font-size: 10px; display: none; align-items: center; justify-content: center; }
-.selected .check { display: flex; }
-.tag { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; background: var(--accent); color: white; padding: 1px 5px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
-
-select { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--ink); width: 100%; min-height: 40px; }
-
-.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-.metric { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px; text-align: center; }
-.metric.good { background: var(--green-bg); border-color: var(--green); }
-.metric.warn { background: var(--yellow-bg); border-color: #C49A00; }
-.metric.bad { background: var(--red-bg); border-color: var(--red); }
-.m-label { font-size: 9px; color: var(--ink3); margin-bottom: 1px; }
-.m-val { font-size: 16px; font-weight: 700; }
-.m-sub { font-size: 9px; color: var(--ink3); margin-top: 1px; }
-
-.btn { display: inline-flex; align-items: center; justify-content: center; padding: 7px 14px; min-height: 36px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--card); color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
-.btn:active { opacity: .7; }
-.btn.primary { background: var(--blue); color: white; border-color: var(--blue); }
-.btn.danger { background: var(--red-bg); color: var(--red); border-color: var(--red); }
-.btn:disabled { opacity: .35; }
-.btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.info-box { background: var(--blue-bg); border: 1px solid #9DC3E6; border-radius: var(--radius); padding: 7px 9px; font-size: 11px; line-height: 1.5; color: var(--ink2); }
-.info-box.good { background: var(--green-bg); border-color: var(--green); }
-.info-box.warn { background: var(--yellow-bg); border-color: #C49A00; }
-
-.terminus-item { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); font-size: 11px; margin: 2px; }
-.terminus-num { width: 16px; height: 16px; border-radius: 50%; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
-
-.jewel-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid var(--border); }
-.jewel-row:last-child { border-bottom: none; }
-.jewel-dot { width: 8px; height: 8px; border-radius: 50%; background: #FFD700; border: 2px solid #B8860B; flex-shrink: 0; }
-.jewel-dot.used { background: var(--green); border-color: var(--green); }
-.jewel-name { font-size: 11px; flex: 1; }
-.jewel-badge { font-size: 10px; font-weight: 600; color: var(--green); }
-
-/* Toggle button */
-.toggle-btn { position: fixed; bottom: 20px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--blue); color: white; border: none; font-size: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 12px rgba(0,0,0,.3); z-index: 100; cursor: pointer; }
-.toggle-btn:active { opacity: .8; transform: scale(.95); }
-
-/* Map fullscreen mode */
-.map-area.fullscreen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; }
-.controls.hidden { display: none; }
-
+:root{--bg:#F5F0E8;--card:#FDFAF4;--border:#D4C9B0;--ink:#2C2416;--ink2:#5C5040;--ink3:#8C7D6A;--accent:#8B2E0A;--green:#1E6B3C;--green-bg:#EAF5EE;--red:#8B0000;--red-bg:#FDEAEA;--yellow-bg:#FFF8E7;--blue:#1F4E79;--blue-bg:#EBF3FB;--sea:#C8DDE8;--radius:6px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:13px;display:flex;flex-direction:column;}
+header{background:var(--ink);color:#F5F0E8;padding:8px 14px;padding-top:max(8px,env(safe-area-inset-top));flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+header h1{font-size:14px;font-weight:600;}
+.steps{display:flex;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0;}
+.step{flex:1;padding:6px 4px;text-align:center;font-size:10px;font-weight:500;color:var(--ink3);border-bottom:3px solid transparent;}
+.step.active{color:var(--blue);border-bottom-color:var(--blue);}
+.step.done{color:var(--green);}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--border);color:var(--ink);font-size:9px;font-weight:700;margin-right:3px;vertical-align:middle;}
+.step.active .step-num{background:var(--blue);color:white;}
+.step.done .step-num{background:var(--green);color:white;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.controls{background:var(--card);border-bottom:1px solid var(--border);overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-height:48vh;flex-shrink:0;}
+.map-area{flex:1;position:relative;background:var(--sea);min-height:0;}
+canvas{display:block;width:100%;height:100%;touch-action:none;}
+@media(orientation:landscape){.main{flex-direction:row;}.controls{border-bottom:none;border-right:1px solid var(--border);max-height:none;width:270px;flex-shrink:0;}}
+.section-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.ticket-card{border:2px solid var(--border);border-radius:var(--radius);padding:8px 10px;cursor:pointer;background:var(--bg);margin-bottom:4px;position:relative;min-height:38px;display:flex;flex-direction:column;justify-content:center;}
+.ticket-card.selected{border-color:var(--tc,var(--blue));background:var(--card);}
+.ticket-card.long{border-left:4px solid var(--accent);}
+.t-header{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;}
+.t-name{font-size:12px;font-weight:600;line-height:1.3;}
+.t-pts{font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;}
+.t-meta{font-size:10px;color:var(--ink3);margin-top:2px;}
+.check{position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:var(--tc,var(--blue));color:white;font-size:10px;display:none;align-items:center;justify-content:center;}
+.selected .check{display:flex;}
+.tag{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;background:var(--accent);color:white;padding:1px 4px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+select,.select{font-family:inherit;font-size:13px;padding:8px 10px;border:2px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--ink);width:100%;min-height:38px;}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.metric{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:6px;text-align:center;}
+.metric.good{background:var(--green-bg);border-color:var(--green);}
+.metric.warn{background:var(--yellow-bg);border-color:#C49A00;}
+.metric.bad{background:var(--red-bg);border-color:var(--red);}
+.m-label{font-size:10px;color:var(--ink3);margin-bottom:1px;}
+.m-val{font-size:16px;font-weight:700;}
+.m-sub{font-size:9px;color:var(--ink3);margin-top:1px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:7px 14px;min-height:36px;border-radius:var(--radius);border:2px solid var(--border);background:var(--card);color:var(--ink);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;}
+.btn:active{opacity:.7;}
+.btn.primary{background:var(--blue);color:white;border-color:var(--blue);}
+.btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red);}
+.btn:disabled{opacity:.35;}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+.info-box{background:var(--blue-bg);border:1px solid #9DC3E6;border-radius:var(--radius);padding:8px 10px;font-size:11px;line-height:1.5;color:var(--ink2);}
+.info-box.good{background:var(--green-bg);border-color:var(--green);}
+.info-box.warn{background:var(--yellow-bg);border-color:#C49A00;}
+.terminus-item{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:11px;}
+.terminus-num{width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;}
+.jewel-row{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);}
+.jewel-row:last-child{border-bottom:none;}
+.jewel-dot{width:9px;height:9px;border-radius:50%;background:#FFD700;border:2px solid #B8860B;flex-shrink:0;}
+.jewel-dot.used{background:var(--green);border-color:var(--green);}
+.jewel-name{font-size:11px;flex:1;}
+.jewel-badge{font-size:10px;font-weight:600;color:var(--green);}
+.seg-list{display:flex;flex-wrap:wrap;gap:3px;}
+.seg-list span{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:10px;}
+.toggle-btn{position:fixed;bottom:16px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--blue);color:white;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.3);z-index:100;cursor:pointer;}
+.map-area.fullscreen{position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;}
+.controls.hidden{display:none;}
+</style>
+</head>
 <body>
 <header>
-  <h1>Aventuriers du Rail — Europe · Wizard stratégique</h1>
+  <h1>Rail Europe &#x2014; Wizard</h1>
   <span id="step-indicator" style="font-size:11px;color:#A89880"></span>
 </header>
 <div class="steps" id="steps-bar">
   <div class="step active" id="s1"><span class="step-num">1</span>Tickets</div>
-  <div class="step" id="s2"><span class="step-num">2</span>Enchaînement</div>
-  <div class="step" id="s3"><span class="step-num">3</span>Réseau</div>
-  <div class="step" id="s4"><span class="step-num">4</span>Analyse</div>
+  <div class="step" id="s2"><span class="step-num">2</span>Ordre</div>
+  <div class="step" id="s3"><span class="step-num">3</span>R&#233;seau</div>
+  <div class="step" id="s4"><span class="step-num">4</span>Score</div>
 </div>
 <div class="main">
   <div class="controls" id="sidebar"></div>
   <div class="map-area" id="mapArea"><canvas id="map"></canvas></div>
 </div>
-<button class="toggle-btn" id="toggleBtn" onclick="toggleView()" title="Basculer carte / contrôles">🗺</button>
-
-
+<button class="toggle-btn" id="toggleBtn" onclick="toggleView()">&#x1F5FA;</button>
 <script src="wizard.js"></script>
 </body>
 </html>
