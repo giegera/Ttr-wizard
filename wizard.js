@@ -240,7 +240,9 @@ var S = {
   longTicket: null,
   shortTickets: [],
   sequence: [],
-  network: null
+  network: null,
+  drawnTickets: [],   // indices des 3 tickets courts tirés (étape 1b)
+  keptTickets: []     // indices des tickets courts à garder (décision joueur)
 };
 
 // ── CANVAS ──────────────────────────────────────────────────────────────────────
@@ -281,7 +283,7 @@ function draw() {
     }
   }
 
-  if (S.step <= 2) {
+  if (S.step <= 2 || S.step === '1b') {
     if (S.longTicket !== null) {
       var lp = ticketCities(LONG_TICKETS[S.longTicket].name);
       var lr = dijkstra(lp[0], lp[1]);
@@ -292,7 +294,8 @@ function draw() {
         });
       }
     }
-    S.shortTickets.forEach(function(idx, si) {
+    var ticketsToShow = S.step === '1b' ? S.drawnTickets : S.shortTickets;
+    ticketsToShow.forEach(function(idx, si) {
       var sp = ticketCities(SHORT_TICKETS[idx].name);
       var sr = dijkstra(sp[0], sp[1]);
       if (sr) {
@@ -407,7 +410,7 @@ function draw() {
   });
 
   // Jewel indicators
-  if (S.step >= 2) {
+  if (S.step >= 2 || S.step === '1b') {
     JEWELS.forEach(function(j) {
       var p1 = cityPos(j.a), p2 = cityPos(j.b);
       var mx = (p1[0]+p2[0])/2, my = (p1[1]+p2[1])/2;
@@ -499,14 +502,19 @@ function render() {
   if (!sb) return;
   sb.innerHTML = '';
 
-  document.getElementById('step-indicator').textContent = '\u00c9tape '+S.step+' / 4';
+  var stepLabels = ['1','1b','2','3','4'];
+  var stepDisplay = S.step === '1b' ? '2' : (S.step < 5 ? S.step + 1 : 5);
+  document.getElementById('step-indicator').textContent = '\u00c9tape '+stepDisplay+' / 5';
   ['s1','s2','s3','s4'].forEach(function(id, i) {
     var e = document.getElementById(id);
     if (!e) return;
-    e.className = 'step' + (S.step===i+1?' active':S.step>i+1?' done':'');
+    var stepOrder = [1,'1b',2,3,4];
+    var curIdx = stepOrder.indexOf(S.step);
+    e.className = 'step' + (curIdx===i?' active':curIdx>i?' done':'');
   });
 
   if (S.step === 1) renderStep1(sb);
+  else if (S.step === '1b') renderStep1b(sb);
   else if (S.step === 2) renderStep2(sb);
   else if (S.step === 3) renderStep3(sb);
   else renderStep4(sb);
@@ -572,9 +580,295 @@ function renderStep1(sb) {
 
   var canProceed = S.freeMode || S.longTicket !== null || S.shortTickets.length > 0;
   var btnRow = el('div', {cls:'btn-row'});
-  var nextBtn = btn('Suivant \u2192', true, function(){ goStep(2); }, !canProceed);
+  var nextBtn = btn('Suivant \u2192', true, function(){
+    // Si un grand ticket est choisi (sans mode libre), passer par l'étape tirage
+    if (!S.freeMode && S.longTicket !== null) {
+      S.drawnTickets = []; S.keptTickets = [];
+      goStep('1b');
+    } else {
+      goStep(2);
+    }
+  }, !canProceed);
   append(btnRow, nextBtn);
   sb.appendChild(btnRow);
+}
+
+// ── MODULE ANALYSE COÛT MARGINAL ──────────────────────────────────────────────
+var OPTIMAL_NETWORKS = {
+  "Brest \u2192 Petrograd": { tpts:20, segments:[
+    ["Brest","Paris"],["Paris","Frankfurt"],["Frankfurt","Amsterdam"],
+    ["Amsterdam","Essen"],["Essen","Kobenhavn"],["Kobenhavn","Stockholm"],
+    ["Stockholm","Petrograd"],["Petrograd","Wilno"],["Wilno","Smolensk"],
+    ["Smolensk","Moscou"],["Wilno","Kiev"],["Kiev","Budapest"],["Frankfurt","Berlin"]
+  ]},
+  "Kobenhavn \u2192 Erzurum": { tpts:21, segments:[
+    ["Kobenhavn","Stockholm"],["Stockholm","Petrograd"],["Petrograd","Wilno"],
+    ["Wilno","Kiev"],["Kiev","Budapest"],["Budapest","Bucarest"],
+    ["Bucarest","S\u00e9bastopol"],["S\u00e9bastopol","Erzurum"],
+    ["Kobenhavn","Essen"],["Essen","Frankfurt"],["Frankfurt","Amsterdam"],
+    ["Kiev","Smolensk"]
+  ]},
+  "Cadix \u2192 Stockholm": { tpts:21, segments:[
+    ["Cadix","Madrid"],["Madrid","Barcelone"],["Barcelone","Marseille"],
+    ["Marseille","Z\u00fcrich"],["Z\u00fcrich","Munich"],["Munich","Vienne"],
+    ["Vienne","Budapest"],["Budapest","Kiev"],["Kiev","Varsovie"],
+    ["Varsovie","Dantzig"],["Dantzig","Riga"],["Riga","Petrograd"],
+    ["Petrograd","Stockholm"]
+  ]},
+  "Lisboa \u2192 Dantzig": { tpts:20, segments:[
+    ["Lisboa","Madrid"],["Madrid","Barcelone"],["Barcelone","Marseille"],
+    ["Marseille","Z\u00fcrich"],["Z\u00fcrich","Munich"],["Munich","Vienne"],
+    ["Vienne","Budapest"],["Budapest","Kiev"],["Kiev","Varsovie"],
+    ["Varsovie","Dantzig"],["Dantzig","Riga"],["Riga","Petrograd"],
+    ["Petrograd","Stockholm"]
+  ]},
+  "Palerme \u2192 Moscou": { tpts:20, segments:[
+    ["Palerme","Smyrne"],["Smyrne","Constantinople"],["Constantinople","Bucarest"],
+    ["Bucarest","Kiev"],["Kiev","Budapest"],["Budapest","Vienne"],
+    ["Vienne","Varsovie"],["Varsovie","Wilno"],["Wilno","Petrograd"],
+    ["Petrograd","Stockholm"],["Petrograd","Moscou"]
+  ]},
+  "Edinburgh \u2192 Ath\u00e8nes": { tpts:21, segments:[
+    ["Edinburgh","Londres"],["Londres","Amsterdam"],["Amsterdam","Essen"],
+    ["Essen","Kobenhavn"],["Kobenhavn","Stockholm"],["Stockholm","Petrograd"],
+    ["Petrograd","Wilno"],["Wilno","Kiev"],["Kiev","Budapest"],
+    ["Budapest","Sarajevo"],["Sarajevo","Ath\u00e8nes"],["Ath\u00e8nes","Sofia"]
+  ]}
+};
+
+function segKey(a,b) { return [a,b].sort().join('|'); }
+
+function buildOptimalSegs(longTicketName) {
+  var net = OPTIMAL_NETWORKS[longTicketName];
+  if (!net) return {};
+  var segs = {};
+  net.segments.forEach(function(ab) {
+    var k = segKey(ab[0],ab[1]);
+    if (!segs[k]) {
+      var r = ROUTES.find(function(r){ return segKey(r[0],r[1])===k; });
+      if (r) segs[k] = r[2];
+    }
+  });
+  return segs;
+}
+
+function areConnectedInSegs(a,b,segs) {
+  var adj = {};
+  Object.keys(segs).forEach(function(k) {
+    var ab=k.split('|');
+    adj[ab[0]]=adj[ab[0]]||[]; adj[ab[1]]=adj[ab[1]]||[];
+    adj[ab[0]].push(ab[1]); adj[ab[1]].push(ab[0]);
+  });
+  if (!adj[a]||!adj[b]) return false;
+  var vis={},q=[a]; vis[a]=true;
+  while(q.length){ var u=q.shift(); if(u===b) return true; (adj[u]||[]).forEach(function(v){if(!vis[v]){vis[v]=true;q.push(v);}}); }
+  return false;
+}
+
+function dijkstraMarginal(src,dst,posedSegs) {
+  var dist={},prev={},vis={};
+  Object.keys(CITIES).forEach(function(c){dist[c]=Infinity;});
+  if(dist[src]===undefined||dist[dst]===undefined) return null;
+  dist[src]=0;
+  var pq=[[0,src]];
+  while(pq.length){
+    pq.sort(function(a,b){return a[0]-b[0];});
+    var item=pq.shift(),d=item[0],u=item[1];
+    if(vis[u]) continue; vis[u]=true;
+    if(u===dst) break;
+    (GRAPH[u]||[]).forEach(function(vw){
+      var v=vw[0],w=vw[1],k=segKey(u,v);
+      var cost=posedSegs[k]?0:w;
+      if(d+cost<(dist[v]!==undefined?dist[v]:Infinity)){
+        dist[v]=d+cost; prev[v]=u; pq.push([dist[v],v]);
+      }
+    });
+  }
+  if(dist[dst]===Infinity) return null;
+  var path=[],cur=dst;
+  while(cur!==undefined){path.unshift(cur);cur=prev[cur];}
+  return {path:path,marginalWagons:dist[dst]};
+}
+
+function computeMarginalCost(shortTicketName,posedSegs) {
+  var parts=shortTicketName.split(' \u2192 ');
+  var a=parts[0].trim(),b=parts[parts.length-1].trim();
+  if(!CITIES[a]||!CITIES[b]) return null;
+  if(areConnectedInSegs(a,b,posedSegs)) return {marginalWagons:0,alreadyValid:true,path:[]};
+  var result=dijkstraMarginal(a,b,posedSegs);
+  if(!result) return null;
+  return {marginalWagons:result.marginalWagons,alreadyValid:false,path:result.path};
+}
+
+function analyzeShortTickets(longTicketName,shortTicketIndices) {
+  var posedSegs=buildOptimalSegs(longTicketName);
+  var net=OPTIMAL_NETWORKS[longTicketName];
+  if(!net) return null;
+  var wagonsUsed=Object.keys(posedSegs).reduce(function(s,k){return s+posedSegs[k];},0);
+  var wagonsLeft=45-wagonsUsed;
+  var results=shortTicketIndices.map(function(idx){
+    var ticket=SHORT_TICKETS[idx];
+    var mc=computeMarginalCost(ticket.name,posedSegs);
+    if(!mc) return {idx:idx,ticket:ticket,marginalWagons:999,alreadyValid:false,path:[],ratio:0,pts:ticket.pts};
+    var ratio=mc.marginalWagons===0?999:ticket.pts/mc.marginalWagons;
+    return {idx:idx,ticket:ticket,marginalWagons:mc.marginalWagons,alreadyValid:mc.alreadyValid,path:mc.path,ratio:ratio,pts:ticket.pts};
+  });
+  var best=null,bestScore=-1;
+  for(var mask=1;mask<8;mask++){
+    var kept=[],totalW=0,totalPts=0;
+    for(var i=0;i<3;i++){
+      if(mask&(1<<i)){kept.push(results[i]);totalW+=results[i].marginalWagons;totalPts+=results[i].pts;}
+    }
+    if(totalW<=wagonsLeft&&totalPts>bestScore){bestScore=totalPts;best={kept:kept,totalMarginalWagons:totalW,totalPts:totalPts};}
+  }
+  if(!best){
+    var sorted=results.slice().sort(function(a,b){return b.ratio-a.ratio||b.pts-a.pts;});
+    best={kept:[sorted[0]],totalMarginalWagons:sorted[0].marginalWagons,totalPts:sorted[0].pts,forced:true};
+  }
+  return {longTicket:longTicketName,wagonsUsed:wagonsUsed,wagonsLeft:wagonsLeft,tickets:results,recommendation:best};
+}
+
+// ── STEP 1b : TIRAGE TICKETS COURTS ──────────────────────────────────────────
+function renderStep1b(sb) {
+  var longName = LONG_TICKETS[S.longTicket].name;
+  var analysis = S.drawnTickets.length === 3 ? analyzeShortTickets(longName, S.drawnTickets) : null;
+
+  append(sb, sectionLabel('Grand ticket sélectionné'));
+  var lt = el('div', {cls:'ticket-card selected'});
+  lt.style.setProperty('--tc','#E63946');
+  var lh = el('div', {cls:'t-header'});
+  var ln = el('div', {cls:'t-name', text:longName});
+  var lp = el('div', {cls:'t-pts', text:LONG_TICKETS[S.longTicket].pts+'pts'});
+  lp.style.color='#E63946';
+  append(lh,ln,lp); append(lt,lh); sb.appendChild(lt);
+
+  // Sélection des 3 tickets courts tirés
+  append(sb, sectionLabel('Vos 3 tickets courts tirés'));
+  var hint = el('div', {cls:'t-meta', text:'Sélectionnez les 3 tickets que vous avez tirés au hasard'});
+  hint.style.cssText='margin-bottom:8px;color:#888;font-size:12px;';
+  sb.appendChild(hint);
+
+  if (S.drawnTickets.length < 3) {
+    var sel = document.createElement('select');
+    sel.className = 'select';
+    var opt0 = document.createElement('option');
+    opt0.value=''; opt0.textContent='\u2014 Ticket '+(S.drawnTickets.length+1)+' \u2014';
+    sel.appendChild(opt0);
+    SHORT_TICKETS.forEach(function(t,i){
+      if(S.drawnTickets.indexOf(i)>=0) return;
+      var opt=document.createElement('option');
+      opt.value=i; opt.textContent=t.name+' ('+t.pts+'pts)';
+      sel.appendChild(opt);
+    });
+    sel.onchange=function(){
+      if(sel.value==='') return;
+      S.drawnTickets.push(parseInt(sel.value));
+      render(); draw();
+    };
+    sb.appendChild(sel);
+  }
+
+  // Afficher les tickets tirés avec leur analyse
+  S.drawnTickets.forEach(function(idx,si){
+    var t=SHORT_TICKETS[idx];
+    var card=el('div',{cls:'ticket-card selected'});
+    card.style.setProperty('--tc', COLORS.shorts[si]||'#555');
+    var hdr=el('div',{cls:'t-header'});
+    var nm=el('div',{cls:'t-name',text:t.name});
+    var pts=el('div',{cls:'t-pts',text:t.pts+'pts'});
+    pts.style.color=COLORS.shorts[si]||'#555';
+
+    // Info coût marginal si analyse disponible
+    if(analysis){
+      var res=analysis.tickets[si];
+      var meta=el('div',{cls:'t-meta'});
+      if(res.alreadyValid){
+        meta.textContent='\u2705 Déjà dans le réseau — coût 0w';
+        meta.style.color='#1E6B3C';
+      } else {
+        meta.textContent='\u26A0 Coût marginal : '+res.marginalWagons+'w (ratio '+
+          (res.ratio===999?'\u221e':res.ratio.toFixed(1))+'pts/w)';
+        meta.style.color=res.marginalWagons<=3?'#CC6600':'#E63946';
+      }
+      append(hdr,nm,pts);
+      append(card,hdr,meta);
+    } else {
+      append(hdr,nm,pts); append(card,hdr);
+    }
+
+    // Bouton supprimer
+    var del=el('button');
+    del.textContent='\u2715';
+    del.style.cssText='float:right;background:none;border:none;cursor:pointer;color:#999;font-size:14px;padding:2px 6px;';
+    del.onclick=function(){
+      S.drawnTickets.splice(si,1);
+      S.keptTickets=[];
+      render(); draw();
+    };
+    card.insertBefore(del,card.firstChild);
+    sb.appendChild(card);
+  });
+
+  // Recommandation
+  if(analysis){
+    var recDiv=el('div');
+    recDiv.style.cssText='margin-top:12px;padding:10px;background:#EAF5EE;border-radius:8px;border-left:4px solid #1E6B3C;';
+
+    var recTitle=el('div');
+    recTitle.style.cssText='font-weight:bold;color:#1E6B3C;font-size:13px;margin-bottom:6px;';
+    recTitle.textContent='\uD83C\uDFAF Recommandation';
+    recDiv.appendChild(recTitle);
+
+    var rec=analysis.recommendation;
+    var keptNames=rec.kept.map(function(t){return t.ticket.name;});
+
+    // Ligne par ticket avec verdict
+    analysis.tickets.forEach(function(t){
+      var isKept=rec.kept.indexOf(t)>=0;
+      var line=el('div');
+      line.style.cssText='display:flex;align-items:center;margin:3px 0;font-size:12px;';
+      var icon=el('span');
+      icon.textContent=isKept?'\u2705 GARDER ':'\u274C D\u00c9FAUSSER ';
+      icon.style.cssText='font-weight:bold;color:'+(isKept?'#1E6B3C':'#E63946')+';min-width:90px;';
+      var name=el('span',{text:t.ticket.name+' ('+t.ticket.pts+'pts)'});
+      name.style.color=isKept?'#2C2416':'#888';
+      append(line,icon,name);
+      recDiv.appendChild(line);
+    });
+
+    // Résumé
+    var summary=el('div');
+    summary.style.cssText='margin-top:8px;padding-top:8px;border-top:1px solid #B8DBC5;font-size:12px;color:#2C2416;';
+    var wagonsInfo='';
+    if(rec.totalMarginalWagons===0){
+      wagonsInfo='Sans wagon supplémentaire';
+    } else if(rec.forced){
+      wagonsInfo='Attention : +'+rec.totalMarginalWagons+'w nécessaires (wagons limités)';
+    } else {
+      wagonsInfo='+'+rec.totalMarginalWagons+'w marginaux';
+    }
+    summary.textContent='Gain : +'+rec.totalPts+'pts  |  '+wagonsInfo+
+      '  |  '+analysis.wagonsLeft+' wagons libres sur le parcours';
+    recDiv.appendChild(summary);
+    sb.appendChild(recDiv);
+
+    // Boutons de navigation
+    var btnRow=el('div',{cls:'btn-row'});
+    append(btnRow,
+      btn('\u2190 Retour',false,function(){goStep(1);}),
+      btn('Continuer \u2192',true,function(){
+        S.keptTickets=rec.kept.map(function(t){return t.idx;});
+        // Merge keptTickets into shortTickets for step 2 onward
+        S.shortTickets=S.keptTickets.slice();
+        goStep(2);
+      })
+    );
+    sb.appendChild(btnRow);
+  } else {
+    var btnRow2=el('div',{cls:'btn-row'});
+    append(btnRow2, btn('\u2190 Retour',false,function(){goStep(1);}));
+    sb.appendChild(btnRow2);
+  }
 }
 
 function renderStep2(sb) {
@@ -645,7 +939,9 @@ function renderStep2(sb) {
   var valBtn = btn('Valider le r\u00e9seau \u2192', true, function(){ goStep(3); }, !(net && wagons <= 45));
   valBtn.id = 'btn-validate';
   append(btnRow,
-    btn('\u2190 Retour', false, function(){ goStep(1); }),
+    btn('\u2190 Retour', false, function(){
+      goStep(!S.freeMode && S.longTicket !== null ? '1b' : 1);
+    }),
     btn('Effacer', false, function(){ clearSequence(); }),
     valBtn
   );
@@ -863,7 +1159,7 @@ function toggleFreeMode() {
 }
 function resetAll() {
   S.step=1; S.freeMode=false; S.longTicket=null; S.shortTickets=[];
-  S.sequence=[]; S.network=null;
+  S.sequence=[]; S.network=null; S.drawnTickets=[]; S.keptTickets=[];
   render(); draw();
 }
 
