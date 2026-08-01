@@ -729,6 +729,19 @@ function analyzeShortTickets(longTicketName,shortTicketIndices) {
 }
 
 // ── STEP 1b : TIRAGE TICKETS COURTS ──────────────────────────────────────────
+function drawRandomTickets() {
+  var available = [];
+  for (var i = 0; i < SHORT_TICKETS.length; i++) available.push(i);
+  // Fisher-Yates shuffle, prendre les 3 premiers
+  for (var j = available.length - 1; j > 0; j--) {
+    var k = Math.floor(Math.random() * (j + 1));
+    var tmp = available[j]; available[j] = available[k]; available[k] = tmp;
+  }
+  S.drawnTickets = [available[0], available[1], available[2]];
+  S.keptTickets = [];
+  render(); draw();
+}
+
 function renderStep1b(sb) {
   var longName = LONG_TICKETS[S.longTicket].name;
   var analysis = S.drawnTickets.length === 3 ? analyzeShortTickets(longName, S.drawnTickets) : null;
@@ -742,133 +755,113 @@ function renderStep1b(sb) {
   lp.style.color='#E63946';
   append(lh,ln,lp); append(lt,lh); sb.appendChild(lt);
 
-  // Sélection des 3 tickets courts tirés
-  append(sb, sectionLabel('Vos 3 tickets courts tirés'));
-  var hint = el('div', {cls:'t-meta', text:'Sélectionnez les 3 tickets que vous avez tirés au hasard'});
-  hint.style.cssText='margin-bottom:8px;color:#888;font-size:12px;';
-  sb.appendChild(hint);
+  // Tirage aléatoire
+  append(sb, sectionLabel('Tirage des tickets courts'));
 
-  if (S.drawnTickets.length < 3) {
-    var sel = document.createElement('select');
-    sel.className = 'select';
-    var opt0 = document.createElement('option');
-    opt0.value=''; opt0.textContent='\u2014 Ticket '+(S.drawnTickets.length+1)+' \u2014';
-    sel.appendChild(opt0);
-    SHORT_TICKETS.forEach(function(t,i){
-      if(S.drawnTickets.indexOf(i)>=0) return;
-      var opt=document.createElement('option');
-      opt.value=i; opt.textContent=t.name+' ('+t.pts+'pts)';
-      sel.appendChild(opt);
+  if (S.drawnTickets.length === 0) {
+    // Bouton de tirage
+    var drawBtn = el('button');
+    drawBtn.className = 'btn btn-primary';
+    drawBtn.style.cssText = 'width:100%;padding:14px;font-size:15px;margin:8px 0;';
+    drawBtn.textContent = '\uD83C\uDFB2 Tirer 3 tickets courts';
+    drawBtn.onclick = drawRandomTickets;
+    sb.appendChild(drawBtn);
+    var hint = el('div', {cls:'t-meta', text:'Appuyez pour simuler le tirage aléatoire de 3 tickets'});
+    hint.style.cssText='color:#888;font-size:12px;text-align:center;';
+    sb.appendChild(hint);
+  } else {
+    // Afficher les 3 tickets tirés avec leur analyse
+    S.drawnTickets.forEach(function(idx,si){
+      var t=SHORT_TICKETS[idx];
+      var card=el('div',{cls:'ticket-card selected'});
+      card.style.setProperty('--tc', COLORS.shorts[si]||'#555');
+      var hdr=el('div',{cls:'t-header'});
+      var nm=el('div',{cls:'t-name',text:t.name});
+      var pts=el('div',{cls:'t-pts',text:t.pts+'pts'});
+      pts.style.color=COLORS.shorts[si]||'#555';
+
+      if(analysis){
+        var res=analysis.tickets[si];
+        var meta=el('div',{cls:'t-meta'});
+        if(res.alreadyValid){
+          meta.textContent='\u2705 Déjà dans le réseau — 0w';
+          meta.style.color='#1E6B3C';
+        } else {
+          meta.textContent='\u26A0 Coût marginal : '+res.marginalWagons+'w ('+
+            (res.ratio===999?'\u221e':res.ratio.toFixed(1))+'pts/w)';
+          meta.style.color=res.marginalWagons<=3?'#CC6600':'#E63946';
+        }
+        append(hdr,nm,pts);
+        append(card,hdr,meta);
+      } else {
+        append(hdr,nm,pts); append(card,hdr);
+      }
+      sb.appendChild(card);
     });
-    sel.onchange=function(){
-      if(sel.value==='') return;
-      S.drawnTickets.push(parseInt(sel.value));
-      render(); draw();
-    };
-    sb.appendChild(sel);
+
+    // Recommandation
+    if(analysis){
+      var recDiv=el('div');
+      recDiv.style.cssText='margin-top:12px;padding:10px;background:#EAF5EE;border-radius:8px;border-left:4px solid #1E6B3C;';
+
+      var recTitle=el('div');
+      recTitle.style.cssText='font-weight:bold;color:#1E6B3C;font-size:13px;margin-bottom:6px;';
+      recTitle.textContent='\uD83C\uDFAF Recommandation';
+      recDiv.appendChild(recTitle);
+
+      var rec=analysis.recommendation;
+      analysis.tickets.forEach(function(t){
+        var isKept=rec.kept.indexOf(t)>=0;
+        var line=el('div');
+        line.style.cssText='display:flex;align-items:center;margin:3px 0;font-size:12px;';
+        var icon=el('span');
+        icon.textContent=isKept?'\u2705 GARDER ':'\u274C D\u00c9FAUSSER ';
+        icon.style.cssText='font-weight:bold;color:'+(isKept?'#1E6B3C':'#E63946')+';min-width:90px;';
+        var name=el('span',{text:t.ticket.name+' ('+t.ticket.pts+'pts)'});
+        name.style.color=isKept?'#2C2416':'#888';
+        append(line,icon,name);
+        recDiv.appendChild(line);
+      });
+
+      var summary=el('div');
+      summary.style.cssText='margin-top:8px;padding-top:8px;border-top:1px solid #B8DBC5;font-size:12px;color:#2C2416;';
+      var wagonsInfo='';
+      if(rec.totalMarginalWagons===0){
+        wagonsInfo='Sans wagon supplémentaire';
+      } else if(rec.forced){
+        wagonsInfo='Attention : +'+rec.totalMarginalWagons+'w nécessaires';
+      } else {
+        wagonsInfo='+'+rec.totalMarginalWagons+'w marginaux';
+      }
+      summary.textContent='Gain : +'+rec.totalPts+'pts  |  '+wagonsInfo;
+      recDiv.appendChild(summary);
+      sb.appendChild(recDiv);
+    }
+
+    // Bouton retirer (relancer)
+    var rerollBtn = el('button');
+    rerollBtn.className = 'btn';
+    rerollBtn.style.cssText='width:100%;margin-top:8px;font-size:12px;';
+    rerollBtn.textContent='\uD83D\uDD04 Nouveau tirage';
+    rerollBtn.onclick = drawRandomTickets;
+    sb.appendChild(rerollBtn);
   }
 
-  // Afficher les tickets tirés avec leur analyse
-  S.drawnTickets.forEach(function(idx,si){
-    var t=SHORT_TICKETS[idx];
-    var card=el('div',{cls:'ticket-card selected'});
-    card.style.setProperty('--tc', COLORS.shorts[si]||'#555');
-    var hdr=el('div',{cls:'t-header'});
-    var nm=el('div',{cls:'t-name',text:t.name});
-    var pts=el('div',{cls:'t-pts',text:t.pts+'pts'});
-    pts.style.color=COLORS.shorts[si]||'#555';
-
-    // Info coût marginal si analyse disponible
-    if(analysis){
-      var res=analysis.tickets[si];
-      var meta=el('div',{cls:'t-meta'});
-      if(res.alreadyValid){
-        meta.textContent='\u2705 Déjà dans le réseau — coût 0w';
-        meta.style.color='#1E6B3C';
-      } else {
-        meta.textContent='\u26A0 Coût marginal : '+res.marginalWagons+'w (ratio '+
-          (res.ratio===999?'\u221e':res.ratio.toFixed(1))+'pts/w)';
-        meta.style.color=res.marginalWagons<=3?'#CC6600':'#E63946';
-      }
-      append(hdr,nm,pts);
-      append(card,hdr,meta);
-    } else {
-      append(hdr,nm,pts); append(card,hdr);
-    }
-
-    // Bouton supprimer
-    var del=el('button');
-    del.textContent='\u2715';
-    del.style.cssText='float:right;background:none;border:none;cursor:pointer;color:#999;font-size:14px;padding:2px 6px;';
-    del.onclick=function(){
-      S.drawnTickets.splice(si,1);
-      S.keptTickets=[];
-      render(); draw();
-    };
-    card.insertBefore(del,card.firstChild);
-    sb.appendChild(card);
-  });
-
-  // Recommandation
+  // Navigation
+  var btnRow=el('div',{cls:'btn-row'});
   if(analysis){
-    var recDiv=el('div');
-    recDiv.style.cssText='margin-top:12px;padding:10px;background:#EAF5EE;border-radius:8px;border-left:4px solid #1E6B3C;';
-
-    var recTitle=el('div');
-    recTitle.style.cssText='font-weight:bold;color:#1E6B3C;font-size:13px;margin-bottom:6px;';
-    recTitle.textContent='\uD83C\uDFAF Recommandation';
-    recDiv.appendChild(recTitle);
-
-    var rec=analysis.recommendation;
-    var keptNames=rec.kept.map(function(t){return t.ticket.name;});
-
-    // Ligne par ticket avec verdict
-    analysis.tickets.forEach(function(t){
-      var isKept=rec.kept.indexOf(t)>=0;
-      var line=el('div');
-      line.style.cssText='display:flex;align-items:center;margin:3px 0;font-size:12px;';
-      var icon=el('span');
-      icon.textContent=isKept?'\u2705 GARDER ':'\u274C D\u00c9FAUSSER ';
-      icon.style.cssText='font-weight:bold;color:'+(isKept?'#1E6B3C':'#E63946')+';min-width:90px;';
-      var name=el('span',{text:t.ticket.name+' ('+t.ticket.pts+'pts)'});
-      name.style.color=isKept?'#2C2416':'#888';
-      append(line,icon,name);
-      recDiv.appendChild(line);
-    });
-
-    // Résumé
-    var summary=el('div');
-    summary.style.cssText='margin-top:8px;padding-top:8px;border-top:1px solid #B8DBC5;font-size:12px;color:#2C2416;';
-    var wagonsInfo='';
-    if(rec.totalMarginalWagons===0){
-      wagonsInfo='Sans wagon supplémentaire';
-    } else if(rec.forced){
-      wagonsInfo='Attention : +'+rec.totalMarginalWagons+'w nécessaires (wagons limités)';
-    } else {
-      wagonsInfo='+'+rec.totalMarginalWagons+'w marginaux';
-    }
-    summary.textContent='Gain : +'+rec.totalPts+'pts  |  '+wagonsInfo+
-      '  |  '+analysis.wagonsLeft+' wagons libres sur le parcours';
-    recDiv.appendChild(summary);
-    sb.appendChild(recDiv);
-
-    // Boutons de navigation
-    var btnRow=el('div',{cls:'btn-row'});
     append(btnRow,
       btn('\u2190 Retour',false,function(){goStep(1);}),
       btn('Continuer \u2192',true,function(){
-        S.keptTickets=rec.kept.map(function(t){return t.idx;});
-        // Merge keptTickets into shortTickets for step 2 onward
+        S.keptTickets=analysis.recommendation.kept.map(function(t){return t.idx;});
         S.shortTickets=S.keptTickets.slice();
         goStep(2);
       })
     );
-    sb.appendChild(btnRow);
   } else {
-    var btnRow2=el('div',{cls:'btn-row'});
-    append(btnRow2, btn('\u2190 Retour',false,function(){goStep(1);}));
-    sb.appendChild(btnRow2);
+    append(btnRow, btn('\u2190 Retour',false,function(){goStep(1);}));
   }
+  sb.appendChild(btnRow);
 }
 
 function renderStep2(sb) {
